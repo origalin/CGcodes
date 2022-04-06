@@ -74,7 +74,7 @@ function main() {
 
   // Draw connect-the-dots for 6 vertices (never 'vertexes'!!).
   // see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawArrays.xml
- gl.drawArrays(gl.LINE_LOOP, 0, n); // gl.drawArrays(mode, first, count)
+ gl.drawArrays(gl.LINES, 0, n); // gl.drawArrays(mode, first, count)
 			//mode: sets drawing primitive to use. Other valid choices: 
 				// gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
 				// gl.TRIANGLES, gl.TRIANGLES_STRIP, gl.TRIANGLE_FAN
@@ -94,16 +94,24 @@ function main() {
 function initVertexBuffers(gl) {
 //==============================================================================
 // first, create an array with all our vertex attribute values:
-  var vertices = new Float32Array([
-     0.0,  0.5, 0.0, 1.0,	// CAREFUL! I made these into 4D points/ vertices: x,y,z,w.
-    -0.2,  0.0, 0.0, 1.0,	// new point!  (? What happens if I make w=0 instead of 1.0?)
-    -0.5, -0.5, 0.0, 1.0,
-     0.0, -0.2, 0.0, 1.0, 	// new point!
-     0.5, -0.5, 0.0, 1.0,	//
-     0.2,  0.0, 0.0, 1.0, 	// new point!  (note we need a trailing comma here)
 
-  ]);
-  var n = 6; // The number of vertices
+  var dot1 = [-0.5,-0.5,0,1.0]
+  var dot2 = [-0.5,0.5,0,1.0]
+  var dot3 = [0.5,0.5,0,1.0]
+  var dot4 = [0.5,-0.5,0,1.0]
+  var dot5 = [-0.5,-0.5,1,1.0]
+  var dot6 = [-0.5,0.5,1,1.0]
+  var dot7 = [0.5,0.5,1,1.0]
+  var dot8 = [0.5,-0.5,1,1.0]
+
+  var vert = [
+    dot1, dot2, dot2, dot3, dot3, dot4, dot4, dot1,
+    dot5, dot6, dot6, dot7, dot7, dot8, dot8, dot5,
+    dot1, dot5, dot2, dot6, dot3, dot7, dot4, dot8
+  ].flat()
+
+  var vertices = new Float32Array(vert);
+  var n = vert.length/4; // The number of vertices
 
   // Then in the Graphics hardware, create a vertex buffer object (VBO)
   var vertexBuffer = gl.createBuffer();	// get it's 'handle'
