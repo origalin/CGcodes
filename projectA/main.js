@@ -59,13 +59,14 @@ var FSHADER_SOURCE =
 var gl;													// WebGL rendering context -- the 'webGL' object
 																// in JavaScript with all its member fcns & data
 var g_canvasID;									// HTML-5 'canvas' element ID#. (was 'canvas')
-var g_vertCount;								// # of vertices held by our VBO.(was 'n')
+var g_body_vertCount;								// # of vertices held by our VBO.(was 'n')
+var g_paddle_vertCount;
 var g_modelMatrix;							// 4x4 matrix in JS; sets 'uniform' in GPU
 var uLoc_modelMatrix;						// GPU location where this uniform is stored.
 
 // For animation:---------------------
 var g_lastMS = Date.now();			// Timestamp (in milliseconds) for our 
-                                // most-recently-drawn WebGL screen contents.  
+                                // most-recently-drawn WebGL screen contents.
                                 // Set & used by timerAll() fcn to update all
                                 // time-varying params for our webGL drawings.
   // All of our time-dependent params (you can add more!)
@@ -86,13 +87,13 @@ var g_angle2now  =   0.0; 			// init Current rotation angle, in degrees.
 var g_angle2rate =  89.0;				// init Rotation angle rate, in degrees/second.
 var g_angle2brake=	 1.0;				// init Speed control; 0=stop, 1=full speed.
 var g_angle2min  = -40.0;       // init min, max allowed angle, in degrees
-var g_angle2max  = -20.0;			
+var g_angle2max  = -20.0;
 
 var g_angle3now  =   0.0; 			// init Current rotation angle, in degrees.
 var g_angle3rate =  31.0;				// init Rotation angle rate, in degrees/second.
 var g_angle3brake=	 1.0;				// init Speed control; 0=stop, 1=full speed.
 var g_angle3min  = -40.0;       // init min, max allowed angle, in degrees
-var g_angle3max  =  40.0;			
+var g_angle3max  =  40.0;
 // YOU can add more time-varying params of your own here -- try it!
 // For example, could you add angle3, have it run without limits, and
 // use sin(angle3) to slowly translate the robot-arm base horizontally,
@@ -102,7 +103,7 @@ var g_angle3max  =  40.0;
 function main() {
 //==============================================================================
   // Retrieve the HTML-5 <canvas> element where webGL will draw our pictures:
-  g_canvasID = document.getElementById('webgl');	
+  g_canvasID = document.getElementById('webgl');
 
   // Create the the WebGL rendering context 'gl'. This huge JavaScript object 
   // contains the WebGL state machine adjusted by large sets of WebGL functions,
@@ -113,10 +114,10 @@ function main() {
   // Here's a BETTER version:
   gl = g_canvasID.getContext("webgl", { preserveDrawingBuffer: true});
 	// This fancier-looking version disables HTML-5's default screen-clearing,
-	// so that our draw() functions will over-write previous on-screen results 
+	// so that our draw() functions will over-write previous on-screen results
 	// until we call the gl.clear(COLOR_BUFFER_BIT); function. Try it! can you
 	// make an on-screen button to enable/disable screen clearing? )
-				 
+
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL. Bye!');
     return;
@@ -135,9 +136,16 @@ function main() {
     console.log('Failed to set the positions of the vertices');
     return;
   }
+	// Specify the color for clearing <canvas>
+	gl.clearColor(0, 0, 0, 1); // R,G,B, A==opacity)
 
-  // Specify the color for clearing <canvas>
-  gl.clearColor(0, 0, 0, 1); // R,G,B, A==opacity)
+	gl.enable(gl.DEPTH_TEST); // enabled by default, but let's be SURE.
+	gl.clearDepth(0.0); // each time we 'clear' our depth buffer, set all
+	// pixel depths to 0.0 (1.0 is DEFAULT)
+	gl.depthFunc(gl.GREATER); // (gl.LESS is DEFAULT; reverse it!)
+	// draw a pixel only if its depth value is GREATER
+	// than the depth buffer's stored value.
+
   // Create our (global) model matrix here in JavaScript.  We will set its 
   // values using transformation-matrix calls, and then send its contents to 
   // the GPU to set the value of the uniform named 'u_modelMatrix' in shaders.
@@ -146,15 +154,15 @@ function main() {
   // Get the GPU storage location for u_modelMatrix uniform 
   // (now a global var declared above main().  was 'u_modelMatrix )
   uLoc_modelMatrix = gl.getUniformLocation(gl.program, 'u_modelMatrix');
-  if (!uLoc_modelMatrix) { 
+  if (!uLoc_modelMatrix) {
     console.log('Failed to get the storage location of u_modelMatrix');
     return;
  }
- 
+
 // TEST g_modelMatrix with cuon-matrix-quat03 library's crude push-down stack:	
 // testMatrixStack();
-  
-  
+
+
 // ==============ANIMATION=============
   // Quick tutorials on synchronous, real-time animation in JavaScript/HTML-5: 
   //    https://webglfundamentals.org/webgl/lessons/webgl-animation.html
@@ -174,8 +182,8 @@ function main() {
   //		 	fixed-time 'setInterval()' calls that may take longer than expected.
 
   //------------------------------------  Define & run our animation:
-  var tick = function() {		    // locally (within main() only), define our 
-                                // self-calling animation function. 
+  var tick = function() {		    // locally (within main() only), define our
+                                // self-calling animation function.
     requestAnimationFrame(tick, g_canvasID); // browser callback request; wait
                                 // til browser is ready to re-draw canvas, then
     timerAll();  				// Update all our time-varying params, and
@@ -196,7 +204,7 @@ function timerAll() {
   var nowMS = Date.now();             // current time (in milliseconds)
   var elapsedMS = nowMS - g_lastMS;   // 
   g_lastMS = nowMS;                   // update for next webGL drawing.
-  if(elapsedMS > 1000.0) {            
+  if(elapsedMS > 1000.0) {
     // Browsers won't re-draw 'canvas' element that isn't visible on-screen 
     // (user chose a different browser tab, etc.); when users make the browser
     // window visible again our resulting 'elapsedMS' value has gotten HUGE.
@@ -223,7 +231,7 @@ function timerAll() {
   	 (g_angle3now <= g_angle3min && g_angle3rate < 0) )	 // going under min ?
   	 g_angle3rate *= -1;	// YES: reverse direction.
 	// *NO* limits? Don't let angles go to infinity! cycle within -180 to +180.
-	if(g_angle0min > g_angle0max)	
+	if(g_angle0min > g_angle0max)
 	{// if min and max don't limit the angle, then
 		if(     g_angle0now < -180.0) g_angle0now += 360.0;	// go to >= -180.0 or
 		else if(g_angle0now >  180.0) g_angle0now -= 360.0;	// go to <= +180.0
@@ -246,16 +254,45 @@ function timerAll() {
 }
 
 function initVertexBuffers() {
-//==============================================================================
-  var vertices = new Float32Array ([
-     0.00, 0.00, 0.00, 1.00,		// first triangle   (x,y,z,w==1)
-     0.19, 0.00, 0.00, 1.00,  
-     0.0,  0.49, 0.00, 1.00,
-     0.20, 0.01, 0.00, 1.00,		// second triangle
-     0.20, 0.50, 0.00, 1.00,
-     0.01, 0.50, 0.00, 1.00,
-  ]);
-  g_vertCount = 6;   // The number of vertices (now a global var; was 'n')
+	var dot1 = [-0.25,-0.25,-0.5,1.0]
+	var dot2 = [-0.25,0.25,-0.5,1.0]
+	var dot3 = [0.25,0.25,-0.5,1.0]
+	var dot4 = [0.25,-0.25,-0.5,1.0]
+	var dot5 = [-0.25,-0.25,0.5,1.0]
+	var dot6 = [-0.25,0.25,0.5,1.0]
+	var dot7 = [0.25,0.25,0.5,1.0]
+	var dot8 = [0.25,-0.25,0.5,1.0]
+
+	var dot21 = [-0.25,-0.25,-0.5,1.0]
+	var dot22 = [-0.25,0.25,-0.5,1.0]
+	var dot23 = [0.25,0.25,-0.5,1.0]
+	var dot24 = [0.25,-0.25,-0.5,1.0]
+	var dot25 = [-0.25,-0.25,0.5,1.0]
+	var dot26 = [-0.25,0.25,0.5,1.0]
+	var dot27 = [0.25,0.25,0.5,1.0]
+	var dot28 = [0.25,-0.25,0.5,1.0]
+
+	// var vert = [
+	// 	dot1, dot2, dot4, dot3, dot8, dot7, dot5,
+	// 	dot6, dot1, dot2, dot6, dot3, dot7, dot4, dot8,
+	// 	dot1, dot5
+	// ].flat()
+
+	var body_vert = [
+		dot1, dot2, dot2, dot3, dot3, dot4, dot4, dot1,
+		dot5, dot6, dot6, dot7, dot7, dot8, dot8, dot5,
+		dot1, dot5, dot2, dot6, dot3, dot7, dot4, dot8
+	].flat()
+
+	var paddle_vert = [
+		dot21, dot22, dot22, dot23, dot23, dot24, dot24, dot21,
+		dot25, dot26, dot26, dot27, dot27, dot28, dot28, dot25,
+		dot21, dot25, dot22, dot26, dot23, dot27, dot24, dot28
+	].flat()
+
+  var vertices = new Float32Array ([body_vert, paddle_vert].flat());
+  g_body_vertCount = body_vert.length/4;
+	g_paddle_vertCount = paddle_vert.length/4;
 
   // Create a buffer object in GPU; get its ID:
   var vertexBufferID = gl.createBuffer();
@@ -278,7 +315,7 @@ function initVertexBuffers() {
   // Now connect the 'a_position' data in our VBO to the 'a_position' attribute
   // in the shaders in the GPU:
   gl.vertexAttribPointer(aLoc_Position, 4, gl.FLOAT, false, 0, 0);
-	// websearch yields OpenGL version: 
+	// websearch yields OpenGL version:
 	//		http://www.opengl.org/sdk/docs/man/xhtml/glVertexAttribPointer.xml
 				//	glVertexAttributePointer (
 				//			index == which attribute variable will we use?
@@ -298,69 +335,7 @@ function initVertexBuffers() {
 function drawAll() {
 //==============================================================================
   // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
-//==============================================================
-// Build our Robot Arm by successively moving our drawing axes
-//==============================================================
-// REMINDERS: keep Push/Pop matrix calls BALANCED!
-// ?How? 	-- always introduce them in pairs, and
-//				-- between them insert indented code for xforms & drawings, and
-//				-- 'nest' them as deeply as necessary.
-//				-- (cool! an orderly way to traverse scene graph, too!).
-//				BUT
-//				-- !!BEWARE!! never use any 'set' transform calls within them!
-//						(you'll destroy your scene graph traversal!).
-//				-- !!WARNING!! setIdentity(), setTranslate(), setRotate(), setScale()
-//					 should NEVER be necessary in your code. NEVER!  However, they're
-//					 quite convenient as a 'safety' at the start of the 'drawAll()' fcn,
-//					 to ensure you're not affected by any previously set transforms.
-// -----------------------------
-/* EXAMPLES:
-		g_modelMatrix.setIdentity();		// start with CVV drawing coords.
-		pushMatrix(g_modelMatrix); 			// SAVE them,
-				<INDENTED TRANSFORM & DRAWING CODE>;  
-				<INDENTED TRANSFORM & DRAWING CODE>;  
-		g_modelMatrix = popMatrix();		// RESTORE them.
------------------
-		pushMatrix(g_modelMatrix);
-				<INDENTED TRANSFORM & DRAWING CODE>;  
-				pushMatrix(g_modelMatrix);
-						<INDENTED TRANSFORM & DRAWING CODE>;  
-						<INDENTED TRANSFORM & DRAWING CODE>;  
-				g_modelMatrix = popMatrix();
-				<INDENTED TRANSFORM & DRAWING CODE>;
-				pushMatrix(g_modelMatrix);
-						<INDENTED TRANSFORM & DRAWING CODE>;  
-						<INDENTED TRANSFORM & DRAWING CODE>;  
-				g_modelMatrix = popMatrix();  
-		g_modelMatrix = popMatrix();
----------------------
-		pushMatrix(g_modelMatrix);
-				<INDENTED TRANSFORM & DRAWING CODE>;  
-				pushMatrix(g_modelMatrix);
-						pushMatrix(g_modelMatrix);
-								<INDENTED TRANSFORM & DRAWING CODE>;  
-								<INDENTED TRANSFORM & DRAWING CODE>;  
-						g_modelMatrix = popMatrix();
-						pushMatrix(g_modelMatrix);
-								<INDENTED TRANSFORM & DRAWING CODE>;  
-								<INDENTED TRANSFORM & DRAWING CODE>;  
-						g_modelMatrix = popMatrix(); 
-						pushMatrix(g_modelMatrix);
-								<INDENTED TRANSFORM & DRAWING CODE>;  
-								<INDENTED TRANSFORM & DRAWING CODE>;  
-						g_modelMatrix = popMatrix();
-						<INDENTED TRANSFORM & DRAWING CODE>;  
-				g_modelMatrix = popMatrix();
-				<INDENTED TRANSFORM & DRAWING CODE>;
-				pushMatrix(g_modelMatrix);
-						<INDENTED TRANSFORM & DRAWING CODE>;  
-						<INDENTED TRANSFORM & DRAWING CODE>;  
-				g_modelMatrix = popMatrix();  
-		g_modelMatrix = popMatrix();
---------------------------
-*/
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 //========================================
 // START with an empty model matrix; drawing axes == CVV
@@ -369,120 +344,19 @@ function drawAll() {
 	// you can comment out this 'setIdentity()' call with no on-screen change...
 
 	// Move drawing axes to the 'base' or 'shoulder' of the robot arm:
-	g_modelMatrix.translate(-0.6,-0.6, 0.0);  // 'set' means DISCARD old matrix,
+	// g_modelMatrix.translate(-0.6,-0.6, 0.0);  // 'set' means DISCARD old matrix,
 		  						// (drawing axes centered in CVV), and then make new
-		  						// drawing axes moved to the lower-left corner of CVV.  
+		  						// drawing axes moved to the lower-left corner of CVV.
 	drawRobot();
 
 }
 
 
 function drawRobot() {
-//==============================================================================
-	//----------------------------------------------------------
 	pushMatrix(g_modelMatrix);
-	//-----------------------------------------------------------			
-			//-------Draw Lower Arm---------------
-		  g_modelMatrix.rotate(g_angle0now, 0, 0, 1);  // Make new drawing axes that
-		  						// that spin around z axis (0,0,1) of the previous 
-		  						// drawing axes, using the same origin.
-		
-		  //g_modelMatrix.rotate(3*g_angle0now, 0,1,0);  //  try: SPIN ON Y AXIS!!!
-			g_modelMatrix.translate(-0.1, 0,0);						// Move box so that we pivot
-									// around the MIDDLE of it's lower edge, and not the left corner.
-		
-		  // DRAW BOX:  Use this matrix to transform & draw our VBO's contents:
-		  drawBox();
-		
-		  //-------Draw Upper Arm----------------
-		  g_modelMatrix.translate(0.1, 0.5, 0); 			// Make new drawing axes that
-		  						// we moved upwards (+y) measured in prev. drawing axes, and
-		  						// moved rightwards (+x) by half the width of the box we just drew.
-		  g_modelMatrix.scale(0.6,0.6,0.6);				// Make new drawing axes that
-		  						// are smaller that the previous drawing axes by 0.6.
-		  g_modelMatrix.rotate(g_angle1now, 0,0,1);	// Make new drawing axes that
-		  						// spin around Z axis (0,0,1) of the previous drawing 
-		  						// axes, using the same origin.
-		  g_modelMatrix.translate(-0.1, 0, 0);			// Make new drawing axes that
-		  						// move sideways by half the width of our rectangle model
-		  						// (REMEMBER! g_modelMatrix.scale() DIDN'T change the 
-		  						// the vertices of our model stored in our VBO; instead
-		  						// we changed the DRAWING AXES used to draw it. Thus
-		  						// we translate by the 0.1, not 0.1*0.6.)
-		
-		  // DRAW BOX: Use this matrix to transform & draw our VBO's contents:
-		  drawBox();
-		  
-		  // DRAW PINCERS:====================================================
-			g_modelMatrix.translate(0.1, 0.5, 0.0);	// Make new drawing axes at 
-								  // the robot's "wrist" -- at the center top of upper arm
-			
-			// SAVE CURRENT DRAWING AXES HERE--------------------------
-			//  copy current matrix so that we can return to these same drawing axes
-			// later, when we draw the UPPER jaw of the robot pincer.  HOW?
-			// Try a 'push-down stack'.  We want to 'push' our current g_modelMatrix
-			// onto the stack to save it; then later 'pop' when we're ready to draw
-			// the upper pincer.
-			//----------------------------------------------------------
-			pushMatrix(g_modelMatrix);
-					//-----------------------------------------------------------
-					// CAUTION!  Instead of our textbook's matrix library 
-					//  (WebGL Programming Guide:  
-					//
-					//				lib/cuon-matrix.js
-					//
-					// be sure your HTML file loads this MODIFIED matrix library:
-					//
-					//				cuon-matrix-quat03.js
-					// where Adrien Katsuya Tateno (former diligent classmate in EECS351)
-					// has added push-down matrix-stack functions 'push' and 'pop'.
-					//--------------------------------------------------------------
-					//=========Draw lower jaw of robot pincer============================
-					g_modelMatrix.rotate(g_angle2now, 0,0,1);		
-										// make new drawing axes that rotate for lower-jaw
-					g_modelMatrix.scale(0.4, 0.4, 0.4);		// Make new drawing axes that
-										// have size of just 40% of previous drawing axes,
-										// (Then translate? no need--we already have the box's 
-										//	left corner at the wrist-point; no change needed.)
-				
-					// Draw inner lower jaw segment:				
-				  // DRAW BOX: Use this matrix to transform & draw our VBO's contents:
-				  drawBox();
-					// Now move drawing axes to the centered end of that lower-jaw segment:
-					g_modelMatrix.translate(0.1, 0.5, 0.0);
-					g_modelMatrix.rotate(40.0, 0,0,1);		// make bend in the lower jaw
-					g_modelMatrix.translate(-0.1, 0.0, 0.0);	// re-center the outer segment,
-					// Draw outer lower jaw segment:				
-				  // DRAW BOX: Use this matrix to transform & draw our VBO's contents:
-				  drawBox();
-				  
-				  // RETURN to the saved drawing axes at the 'wrist':
-					// RETRIEVE PREVIOUSLY-SAVED DRAWING AXES HERE:
-					//---------------------
-			g_modelMatrix = popMatrix();
-			//----------------------	
-			//=========Draw upper jaw of robot pincer============================
-			// (almost identical to the way I drew the upper jaw)
-			g_modelMatrix.rotate(-g_angle2now, 0,0,1);		
-								// make new drawing axes that rotate upper jaw symmetrically
-								// with lower jaw: changed sign of 15.0 and of 0.5
-			g_modelMatrix.scale(0.4, 0.4, 0.4);		// Make new drawing axes that
-								// have size of just 40% of previous drawing axes,
-			g_modelMatrix.translate(-0.2, 0, 0);  // move box LEFT corner at wrist-point.
-			
-			// Draw inner upper jaw segment:				(same as for lower jaw)
-		  // DRAW BOX: Use this matrix to transform & draw our VBO's contents:
-		  drawBox();
-		
-			// Now move drawing axes to the centered end of that upper-jaw segment:
-			g_modelMatrix.translate(0.1, 0.5, 0.0);
-			g_modelMatrix.rotate(-40.0, 0,0,1);		// make bend in the upper jaw that
-																					// is opposite of lower jaw (+/-40.0)
-			g_modelMatrix.translate(-0.1, 0.0, 0.0);	// re-center the outer segment,
-			 
-			// Draw outer upper jaw segment:		(same as for lower jaw)		
-		  // DRAW BOX: Use this matrix to transform & draw our VBO's contents:
-		  drawBox();
+	g_modelMatrix.rotate(g_angle0now, 1, 0, 0);  // Make new drawing axes that
+	drawBody();
+	g_modelMatrix = popMatrix()
 }
 
 function drawArm() {
@@ -497,13 +371,17 @@ function drawPincers() {
 // (be sure to return to current drawing axes on exit)
 }
 
-function drawBox() {
+function drawBody() {
 //==============================================================================
 // Draw our 2 red triangles using current g_modelMatrix:
 		  gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
-		  gl.drawArrays(gl.TRIANGLES, 0, g_vertCount);	// draw all vertices.
+		  gl.drawArrays(gl.LINES, 0, g_body_vertCount);	// draw all vertices.
 }
- 
+
+function drawPaddle(){
+
+}
+
 
 
 function testMatrixStack() {
@@ -530,7 +408,7 @@ function testMatrixStack() {
 	console.log("now 2nd popMatrix");
 	g_modelMatrix = popMatrix();
 	console.log("stack size:", __cuon_matrix_mod_stack.length);
-	console.log("stack:", __cuon_matrix_mod_stack);	
+	console.log("stack:", __cuon_matrix_mod_stack);
 	g_modelMatrix.printMe("after 2nd pop g_ModelMatrix");
 /*
 	// CAREFUL!! The next test will DESTROY contents of g_modelMatrix,
@@ -538,10 +416,10 @@ function testMatrixStack() {
 	console.log("now 3rd popMatrix (on empty stack)");
 	g_modelMatrix = popMatrix();
 	console.log("stack size:", __cuon_matrix_mod_stack.length);
-	console.log("stack:", __cuon_matrix_mod_stack);	
+	console.log("stack:", __cuon_matrix_mod_stack);
 	console.log("g_modelMatrix:", g_modelMatrix)
 	g_modelMatrix.printMe("after 3nd pop g_ModelMatrix");
-	// AHA! CONSOLE ERROR REPORT HERE: 
+	// AHA! CONSOLE ERROR REPORT HERE:
 	// excess 'popMatrix' will MESS UP g_modelMatrix; it's now UNDEFINED!!!
 	// Replace it with identity matrix.
 	g_modelMatrix = new Matrix4();
@@ -563,7 +441,7 @@ function A0_runStop() {
   	g_angle0brake = 0.0;	// stop, and change button label:
   	document.getElementById("A0button").value="Angle 0 OFF";
 	}
-  else 
+  else
   {
   	g_angle0brake = 1.0;	// Otherwise, go.
   	document.getElementById("A0button").value="Angle 0 ON-";
@@ -577,7 +455,7 @@ function A1_runStop() {
   	g_angle1brake = 0.0;	// stop, and change button label:
   	document.getElementById("A1button").value="Angle 1 OFF";
 	}
-  else 
+  else
   {
   	g_angle1brake = 1.0;	// Otherwise, go.
   	document.getElementById("A1button").value="Angle 1 ON-";
@@ -590,7 +468,7 @@ function A2_runStop() {
   	g_angle2brake = 0.0;	// stop, and change button label:
   	document.getElementById("A2button").value="Angle 2 OFF";
 	}
-  else 
+  else
   {
   	g_angle2brake = 1.0;	// Otherwise, go.
   	document.getElementById("A2button").value="Angle 2 ON-";
@@ -604,7 +482,7 @@ function A3_runStop() {
   	g_angle3brake = 0.0;	// stop, and change button label:
   	document.getElementById("A3button").value="Angle 3 OFF";
 	}
-  else 
+  else
   {
   	g_angle3brake = 1.0;	// Otherwise, go.
   	document.getElementById("A3button").value="Angle 3 ON-";
