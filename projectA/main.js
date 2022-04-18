@@ -59,8 +59,12 @@ var FSHADER_SOURCE =
 var gl;													// WebGL rendering context -- the 'webGL' object
 // in JavaScript with all its member fcns & data
 var g_canvasID;									// HTML-5 'canvas' element ID#. (was 'canvas')
-var g_body_vertCount;								// # of vertices held by our VBO.(was 'n')
+var g_vertCount;
+var g_body_vertCount;
 var g_paddle_vertCount;
+var g_base_vertCount;
+var g_frame_vertCount;
+var g_panel_vertCount;
 var g_modelMatrix;							// 4x4 matrix in JS; sets 'uniform' in GPU
 var uLoc_modelMatrix;						// GPU location where this uniform is stored.
 
@@ -71,6 +75,21 @@ var g_lastMS = Date.now();			// Timestamp (in milliseconds) for our
 // time-varying params for our webGL drawings.
 // All of our time-dependent params (you can add more!)
 //---------------
+
+var g_angle_paddle_now = 0.0;
+var g_angle_paddle_rate = -22.0;
+
+var g_angle_plane_now = 0.0;
+var g_angle_plane_rate = -22.0;
+
+var g_angle_frame_now = 0.0;
+var g_angle_frame_rate = -22.0;
+var g_angle_frame_brake = 1.0;
+
+var g_angle_panel_now = 0.0;
+var g_angle_panel_rate = -22.0;
+var g_angle_panel_brake = 1.0;
+
 var g_angle0now = 0.0;       // init Current rotation angle, in degrees
 var g_angle0rate = -22.0;       // init Rotation angle rate, in degrees/second.
 var g_angle0brake = 1.0;				// init Speed control; 0=stop, 1=full speed.
@@ -259,14 +278,41 @@ function initVertexBuffers() {
   var dot7 = [0.25, 0.25, 0.5, 1.0]
   var dot8 = [0.25, -0.25, 0.5, 1.0]
 
-  var dot21 = [-0.25, -0.25, -0.5, 1.0]
-  var dot22 = [-0.25, 0.25, -0.5, 1.0]
-  var dot23 = [0.25, 0.25, -0.5, 1.0]
-  var dot24 = [0.25, -0.25, -0.5, 1.0]
-  var dot25 = [-0.25, -0.25, 0.5, 1.0]
-  var dot26 = [-0.25, 0.25, 0.5, 1.0]
-  var dot27 = [0.25, 0.25, 0.5, 1.0]
-  var dot28 = [0.25, -0.25, 0.5, 1.0]
+  var dot21 = [-0.25, -0.25, 0, 1.0]
+  var dot22 = [-0.25, 0.25, 0, 1.0]
+  var dot23 = [0.25, 0.25, 0, 1.0]
+  var dot24 = [0.25, -0.25, 0, 1.0]
+  var dot25 = [-0.25, -0.25, 1, 1.0]
+  var dot26 = [-0.25, 0.25, 1, 1.0]
+  var dot27 = [0.25, 0.25, 1, 1.0]
+  var dot28 = [0.25, -0.25, 1, 1.0]
+
+  var dot31 = [-0.5, -0.5, -0.5, 1.0]
+  var dot32 = [-0.5, 0.5, -0.5, 1.0]
+  var dot33 = [0.5, 0.5, -0.5, 1.0]
+  var dot34 = [0.5, -0.5, -0.5, 1.0]
+  var dot35 = [-0.5, -0.5, 0.5, 1.0]
+  var dot36 = [-0.5, 0.5, 0.5, 1.0]
+  var dot37 = [0.5, 0.5, 0.5, 1.0]
+  var dot38 = [0.5, -0.5, 0.5, 1.0]
+
+  var dot41 = [-0.5, -0.5, -0.5, 1.0]
+  var dot42 = [-0.5, 0.5, -0.5, 1.0]
+  var dot43 = [0.5, 0.5, -0.5, 1.0]
+  var dot44 = [0.5, -0.5, -0.5, 1.0]
+  var dot45 = [-0.5, -0.5, 0.5, 1.0]
+  var dot46 = [-0.5, 0.5, 0.5, 1.0]
+  var dot47 = [0.5, 0.5, 0.5, 1.0]
+  var dot48 = [0.5, -0.5, 0.5, 1.0]
+
+  var dot51 = [-0.5, -0.5, -0.5, 1.0]
+  var dot52 = [-0.5, 0.5, -0.5, 1.0]
+  var dot53 = [0.5, 0.5, -0.5, 1.0]
+  var dot54 = [0.5, -0.5, -0.5, 1.0]
+  var dot55 = [-0.5, -0.5, 0.5, 1.0]
+  var dot56 = [-0.5, 0.5, 0.5, 1.0]
+  var dot57 = [0.5, 0.5, 0.5, 1.0]
+  var dot58 = [0.5, -0.5, 0.5, 1.0]
 
   // var vert = [
   // 	dot1, dot2, dot4, dot3, dot8, dot7, dot5,
@@ -286,9 +332,31 @@ function initVertexBuffers() {
     dot21, dot25, dot22, dot26, dot23, dot27, dot24, dot28
   ].flat()
 
-  var vertices = new Float32Array([body_vert, paddle_vert].flat());
+  var base_vert = [
+    dot31, dot32, dot32, dot33, dot33, dot34, dot34, dot31,
+    dot35, dot36, dot36, dot37, dot37, dot38, dot38, dot35,
+    dot31, dot35, dot32, dot36, dot33, dot37, dot34, dot38
+  ].flat()
+
+  var frame_vert = [
+    dot41, dot42, dot42, dot43, dot43, dot44, dot44, dot41,
+    dot45, dot46, dot46, dot47, dot47, dot48, dot48, dot45,
+    dot41, dot45, dot42, dot46, dot43, dot47, dot44, dot48
+  ].flat()
+
+  var panel_vert = [
+    dot51, dot52, dot52, dot53, dot53, dot54, dot54, dot51,
+    dot55, dot56, dot56, dot57, dot57, dot58, dot58, dot55,
+    dot51, dot55, dot52, dot56, dot53, dot57, dot54, dot58
+  ].flat()
+
+  var vertices = new Float32Array([body_vert, paddle_vert, base_vert, frame_vert, panel_vert].flat());
+  g_vertCount = vertices.length / 4;
   g_body_vertCount = body_vert.length / 4;
   g_paddle_vertCount = paddle_vert.length / 4;
+  g_base_vertCount = base_vert.length / 4
+  g_frame_vertCount = frame_vert.length / 4
+  g_panel_vertCount = panel_vert.length / 4
 
   // Create a buffer object in GPU; get its ID:
   var vertexBufferID = gl.createBuffer();
@@ -343,16 +411,47 @@ function drawAll() {
   // g_modelMatrix.translate(-0.6,-0.6, 0.0);  // 'set' means DISCARD old matrix,
   // (drawing axes centered in CVV), and then make new
   // drawing axes moved to the lower-left corner of CVV.
-  drawRobot();
+  g_modelMatrix.rotate(15, 1, 1, 0);
+  pushMatrix(g_modelMatrix);
+  g_modelMatrix.translate(-0.5, 0.3, 0);
+  g_modelMatrix.scale(0.3,0.3,0.3);
+  drawPlane();
+  g_modelMatrix = popMatrix();
 
+  pushMatrix(g_modelMatrix);
+  g_modelMatrix.translate(0, -0.3, 0);
+  drawRadar()
+  g_modelMatrix = popMatrix();
 }
 
 
-function drawRobot() {
-  pushMatrix(g_modelMatrix);
-  g_modelMatrix.rotate(g_angle0now, 1, 0, 0);  // Make new drawing axes that
+function drawPlane() {
+  g_modelMatrix.rotate(90, 0, 1, 0);
   drawBody();
-  g_modelMatrix = popMatrix()
+  g_modelMatrix.translate(0, 0, 0.5);
+  g_modelMatrix.scale(0.2,0.2,0.2)
+  g_modelMatrix.rotate(90, 0, 1, 0);
+  g_modelMatrix.rotate(g_angle0now, 1, 0, 0);
+  drawPaddle()
+  g_modelMatrix.rotate(90, 1, 0, 0);
+  drawPaddle()
+  g_modelMatrix.rotate(90, 1, 0, 0);
+  drawPaddle()
+  g_modelMatrix.rotate(90, 1, 0, 0);
+  drawPaddle()
+}
+
+function drawRadar() {
+  g_modelMatrix.scale(0.2,0.2,0.2)
+  g_modelMatrix.rotate(-90, 1,0,0)
+  drawBase()
+  g_modelMatrix.translate(0, 0, 1);
+  g_modelMatrix.rotate(g_angle1now, 0,0,1)
+  drawFrame()
+  g_modelMatrix.translate(0, 0, 0.5);
+  g_modelMatrix.rotate(g_angle1now, 1,0,0)
+  g_modelMatrix.scale(0.5, 0.5, 0.5);
+  drawPanel()
 }
 
 function drawArm() {
@@ -375,7 +474,23 @@ function drawBody() {
 }
 
 function drawPaddle() {
+  gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
+  gl.drawArrays(gl.LINES, g_body_vertCount, g_paddle_vertCount);	// draw all vertices.
+}
 
+function drawBase() {
+  gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
+  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount, g_base_vertCount);	// draw all vertices.
+}
+
+function drawFrame() {
+  gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
+  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount , g_frame_vertCount);	// draw all vertices.
+}
+
+function drawPanel() {
+  gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
+  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount, g_panel_vertCount);	// draw all vertices.
 }
 
 
