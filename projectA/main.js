@@ -93,11 +93,11 @@ var g_angle_panel_min = -30.0;       // init min, max allowed angle, in degrees.
 var g_angle_panel_max = 30.0;
 
 //------------For mouse click-and-drag: -------------------------------
-var g_isDrag=false;		// mouse-drag: true when user holds down mouse button
-var g_xMclik=0.0;			// last mouse button-down position (in CVV coords)
-var g_yMclik=0.0;
-var g_xMdragTot=0.0;	// total (accumulated) mouse-drag amounts (in CVV coords).
-var g_yMdragTot=0.0;
+var g_isDrag = false;		// mouse-drag: true when user holds down mouse button
+var g_xMclik = 0.0;			// last mouse button-down position (in CVV coords)
+var g_yMclik = 0.0;
+var g_xMdragTot = 0.0;	// total (accumulated) mouse-drag amounts (in CVV coords).
+var g_yMdragTot = 0.0;
 
 function main() {
   window.addEventListener("mousedown", myMouseDown);
@@ -218,24 +218,24 @@ function timerAll() {
     if (g_angle_panel_now < -180.0) g_angle_panel_now += 360.0;	// go to >= -180.0 or
     else if (g_angle_panel_now > 180.0) g_angle_panel_now -= 360.0;	// go to <= +180.0
   }
-  if (g_angle_plane_now > 360){
+  if (g_angle_plane_now > 360) {
     g_angle_plane_now -= 360
   }
-  if (g_angle_plane_now < -360){
+  if (g_angle_plane_now < -360) {
     g_angle_plane_now += 360
   }
 
-  if (g_angle_frame_now > 360){
+  if (g_angle_frame_now > 360) {
     g_angle_frame_now -= 360
   }
-  if (g_angle_frame_now < -360){
+  if (g_angle_frame_now < -360) {
     g_angle_frame_now += 360
   }
 
-  if (g_angle_paddle_now > 360){
+  if (g_angle_paddle_now > 360) {
     g_angle_paddle_now -= 360
   }
-  if (g_angle_paddle_now < -360){
+  if (g_angle_paddle_now < -360) {
     g_angle_paddle_now += 360
   }
 }
@@ -381,15 +381,15 @@ function drawAll() {
 
   // rotate on axis perpendicular to the mouse-drag direction:
   g_modelMatrix.rotate(15, 1, 1, 0);
-  var dist = Math.sqrt(g_xMdragTot*g_xMdragTot + g_yMdragTot*g_yMdragTot);
+  var dist = Math.sqrt(g_xMdragTot * g_xMdragTot + g_yMdragTot * g_yMdragTot);
   // why add 0.001? avoids divide-by-zero in next statement
   // in cases where user didn't drag the mouse.)
-  g_modelMatrix.rotate(dist*50.0, -g_yMdragTot+0.0001, g_xMdragTot+0.0001, 0.0);
+  g_modelMatrix.rotate(dist * 50.0, -g_yMdragTot + 0.0001, g_xMdragTot + 0.0001, 0.0);
 
   pushMatrix(g_modelMatrix);
-  g_modelMatrix.translate(Math.sin(g_angle_plane_now / 180.0 * Math.PI)*0.5, 0.3, Math.cos(g_angle_plane_now / 180.0 * Math.PI)*0.5);
-  g_modelMatrix.rotate(g_angle_plane_now, 0,1,0)
-  g_modelMatrix.scale(0.3,0.3,0.3);
+  g_modelMatrix.translate(Math.sin(g_angle_plane_now / 180.0 * Math.PI) * 0.5, 0.3, Math.cos(g_angle_plane_now / 180.0 * Math.PI) * 0.5);
+  g_modelMatrix.rotate(g_angle_plane_now, 0, 1, 0)
+  g_modelMatrix.scale(0.3, 0.3, 0.3);
   drawPlane();
   g_modelMatrix = popMatrix();
 
@@ -401,11 +401,11 @@ function drawAll() {
 
 
 function drawPlane() {
-  g_modelMatrix.rotate(-30, 1,0,0)
+  g_modelMatrix.rotate(-30, 1, 0, 0)
   g_modelMatrix.rotate(90, 0, 1, 0);
   drawBody();
   g_modelMatrix.translate(0, 0, 0.5);
-  g_modelMatrix.scale(0.2,0.2,0.2)
+  g_modelMatrix.scale(0.2, 0.2, 0.2)
   g_modelMatrix.rotate(90, 0, 1, 0);
   g_modelMatrix.rotate(g_angle_paddle_now, 1, 0, 0);
   drawPaddle()
@@ -418,14 +418,14 @@ function drawPlane() {
 }
 
 function drawRadar() {
-  g_modelMatrix.scale(0.2,0.2,0.2)
-  g_modelMatrix.rotate(-90, 1,0,0)
+  g_modelMatrix.scale(0.2, 0.2, 0.2)
+  g_modelMatrix.rotate(-90, 1, 0, 0)
   drawBase()
   g_modelMatrix.translate(0, 0, 1);
-  g_modelMatrix.rotate(g_angle_frame_now, 0,0,1)
+  g_modelMatrix.rotate(g_angle_frame_now, 0, 0, 1)
   drawFrame()
   g_modelMatrix.translate(0, 0, 0.5);
-  g_modelMatrix.rotate(g_angle_panel_now, 1,0,0)
+  g_modelMatrix.rotate(g_angle_panel_now, 1, 0, 0)
   g_modelMatrix.scale(0.5, 0.5, 0.5);
   drawPanel()
 }
@@ -461,7 +461,7 @@ function drawBase() {
 
 function drawFrame() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
-  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount , g_frame_vertCount);	// draw all vertices.
+  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount, g_frame_vertCount);	// draw all vertices.
 }
 
 function drawPanel() {
@@ -561,10 +561,10 @@ function myMouseDown(ev) {
 //  console.log('myMouseDown(pixel coords): xp,yp=\t',xp,',\t',yp);
 
   // Convert to Canonical View Volume (CVV) coordinates too:
-  var x = (xp - g_canvasID.width/2)  / 		// move origin to center of canvas and
-    (g_canvasID.width/2);			// normalize canvas to -1 <= x < +1,
-  var y = (yp - g_canvasID.height/2) /		//										 -1 <= y < +1.
-    (g_canvasID.height/2);
+  var x = (xp - g_canvasID.width / 2) / 		// move origin to center of canvas and
+    (g_canvasID.width / 2);			// normalize canvas to -1 <= x < +1,
+  var y = (yp - g_canvasID.height / 2) /		//										 -1 <= y < +1.
+    (g_canvasID.height / 2);
 //	console.log('myMouseDown(CVV coords  ):  x, y=\t',x,',\t',y);
 
   g_isDrag = true;											// set our mouse-dragging flag
@@ -579,7 +579,7 @@ function myMouseMove(ev) {
 // 		ev.clientX, ev.clientY == mouse pointer location, but measured in webpage
 //		pixels: left-handed coords; UPPER left origin; Y increases DOWNWARDS (!)
 
-  if(g_isDrag===false) return;				// IGNORE all mouse-moves except 'dragging'
+  if (g_isDrag === false) return;				// IGNORE all mouse-moves except 'dragging'
 
   // Create right-handed 'pixel' coords with origin at WebGL canvas LOWER left;
   var rect = ev.target.getBoundingClientRect();	// get canvas corners in pixels
@@ -588,10 +588,10 @@ function myMouseMove(ev) {
 //  console.log('myMouseMove(pixel coords): xp,yp=\t',xp,',\t',yp);
 
   // Convert to Canonical View Volume (CVV) coordinates too:
-  var x = (xp - g_canvasID.width/2)  / 		// move origin to center of canvas and
-    (g_canvasID.width/2);		// normalize canvas to -1 <= x < +1,
-  var y = (yp - g_canvasID.height/2) /		//									-1 <= y < +1.
-    (g_canvasID.height/2);
+  var x = (xp - g_canvasID.width / 2) / 		// move origin to center of canvas and
+    (g_canvasID.width / 2);		// normalize canvas to -1 <= x < +1,
+  var y = (yp - g_canvasID.height / 2) /		//									-1 <= y < +1.
+    (g_canvasID.height / 2);
 //	console.log('myMouseMove(CVV coords  ):  x, y=\t',x,',\t',y);
 
   // find how far we dragged the mouse:
@@ -616,11 +616,11 @@ function myMouseUp(ev) {
 //  console.log('myMouseUp  (pixel coords):\n\t xp,yp=\t',xp,',\t',yp);
 
   // Convert to Canonical View Volume (CVV) coordinates too:
-  var x = (xp - g_canvasID.width/2)  / 		// move origin to center of canvas and
-    (g_canvasID.width/2);			// normalize canvas to -1 <= x < +1,
-  var y = (yp - g_canvasID.height/2) /		//										 -1 <= y < +1.
-    (g_canvasID.height/2);
-  console.log('myMouseUp  (CVV coords  ):\n\t x, y=\t',x,',\t',y);
+  var x = (xp - g_canvasID.width / 2) / 		// move origin to center of canvas and
+    (g_canvasID.width / 2);			// normalize canvas to -1 <= x < +1,
+  var y = (yp - g_canvasID.height / 2) /		//										 -1 <= y < +1.
+    (g_canvasID.height / 2);
+  console.log('myMouseUp  (CVV coords  ):\n\t x, y=\t', x, ',\t', y);
 
   g_isDrag = false;											// CLEAR our mouse-dragging flag, and
   // accumulate any final bit of mouse-dragging we did:
