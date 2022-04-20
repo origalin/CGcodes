@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>FUNC02 Robot Arm</title>
+    <title>Plane and Radar</title>
 </head>
 
 <body onload="main()">
 <canvas id="webgl" width="800" height="800">
     Please use a browser that supports "canvas"
 </canvas>
-<br>(open Console, please!)
+<br>
 <p>
+    press "up" to speed up the plane, press "down" to slow down the plane <br>
+    <span id='Speed'  > Speed:    </span> <br>
     <input type="button" id="A0button" onclick="A0_runStop()" value="Angle 0 ON">
     <input type="button" id="A1button" onclick="A1_runStop()" value="Angle 1 ON">
-    <! these commands create a push-button with labels 'Angle 0', 'Angle 1', etc.
-    When users click the button, call the function name held in 'onclick'>
 </p>
 <script src="lib/webgl-utils.js"></script>
 <script src="lib/webgl-debug.js"></script>
