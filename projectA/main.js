@@ -54,6 +54,9 @@ function main() {
 
   g_canvasID = document.getElementById('webgl');
 
+  g_canvasID.width = window.innerHeight * 0.8
+  g_canvasID.height = g_canvasID.width
+
   gl = g_canvasID.getContext("webgl", {preserveDrawingBuffer: true});
 
   if (!gl) {
