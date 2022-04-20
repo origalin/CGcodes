@@ -34,10 +34,14 @@ var g_angle_frame_rate = -22.0;
 var g_angle_frame_brake = 1.0;
 
 var g_angle_panel_now = 0.0;
+var g_angle_panel_aspect = 90.0;
 var g_angle_panel_rate = 222.0;
 var g_angle_panel_brake = 1.0;
-var g_angle_panel_min = -30.0;
-var g_angle_panel_max = 30.0;
+var g_angle_panel_range = 60
+var g_angle_panel_min = -g_angle_panel_range / 2;
+var g_angle_panel_max = g_angle_panel_range / 2;
+
+var g_isSlide = false
 
 var g_isDrag = false;
 var g_xMclik = 0.0;
@@ -284,6 +288,7 @@ function drawRadar() {
   drawFrame()
   g_modelMatrix.translate(0, 0, 0.5);
   g_modelMatrix.rotate(g_angle_panel_now, 1, 0, 0)
+  g_modelMatrix.rotate(g_angle_panel_aspect - 90, 1, 0, 0)
   g_modelMatrix.scale(0.5, 0.5, 0.5);
   drawPanel()
 }
@@ -313,7 +318,7 @@ function drawPanel() {
   gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount, g_panel_vertCount);
 }
 
-function A0_runStop() {
+function panel_runStop() {
 
   if (g_angle_panel_brake > 0.5) {
     g_angle_panel_brake = 0.0;
@@ -324,7 +329,7 @@ function A0_runStop() {
   }
 }
 
-function A1_runStop() {
+function frame_runStop() {
 
   if (g_angle_frame_brake > 0.5) {
     g_angle_frame_brake = 0.0;
@@ -333,6 +338,20 @@ function A1_runStop() {
     g_angle_frame_brake = 1.0;
     document.getElementById("A1button").value = "Radar frame ON";
   }
+}
+
+function update_panel_range(value) {
+  g_isSlide = true;
+  g_angle_panel_range = value;
+  g_angle_panel_min = -value / 2;
+  g_angle_panel_max = value / 2;
+  document.getElementById('Range').innerHTML = g_angle_panel_range
+}
+
+function update_panel_aspect(value) {
+  g_isSlide = true;
+  g_angle_panel_aspect = value;
+  document.getElementById('Aspect').innerHTML = g_angle_panel_aspect
 }
 
 function myMouseDown(ev) {
@@ -349,6 +368,7 @@ function myMouseDown(ev) {
 }
 
 function myMouseMove(ev) {
+  if (g_isSlide) return;
   if (g_isDrag === false) return;
   var rect = ev.target.getBoundingClientRect();
   var xp = ev.clientX - rect.left;
@@ -373,6 +393,7 @@ function myMouseUp(ev) {
     (g_canvasID.height / 2);
   console.log('myMouseUp  (CVV coords  ):\n\t x, y=\t', x, ',\t', y);
   g_isDrag = false;
+  g_isSlide = false;
   g_xMdragTot += (x - g_xMclik);
   g_yMdragTot += (y - g_yMclik);
 }

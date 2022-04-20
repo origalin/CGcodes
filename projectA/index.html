@@ -13,9 +13,19 @@
 <p>
     Drag mouse to change aspect <br>
     press "up" to speed up the plane, press "down" to slow down the plane <br>
-    <span id='Speed'  > Speed:    </span> <br>
-    <input type="button" id="A0button" onclick="A0_runStop()" value="Radar panel ON">
-    <input type="button" id="A1button" onclick="A1_runStop()" value="Radar frame ON">
+    <span id='Speed'> Speed:    </span> <br>
+    <label>
+        Radar Range:
+        <input class="slider" type="range" min="15" max="120" value="30" oninput="update_panel_range(this.value)">
+        <span id='Range'>30</span>
+    </label> <br>
+    <label>
+        Radar Aspect:
+        <input class="slider" type="range" min="0" max="180" value="90" oninput="update_panel_aspect(this.value)">
+        <span id='Aspect'>90</span>
+    </label> <br>
+    <input type="button" id="A0button" onclick="panel_runStop()" value="Radar panel ON">
+    <input type="button" id="A1button" onclick="frame_runStop()" value="Radar frame ON">
 </p>
 <script src="lib/webgl-utils.js"></script>
 <script src="lib/webgl-debug.js"></script>
