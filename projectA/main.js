@@ -314,10 +314,10 @@ function A0_runStop() {
 
   if (g_angle_panel_brake > 0.5) {
     g_angle_panel_brake = 0.0;
-    document.getElementById("A0button").value = "Angle 0 OFF";
+    document.getElementById("A0button").value = "Radar panel OFF";
   } else {
     g_angle_panel_brake = 1.0;
-    document.getElementById("A0button").value = "Angle 0 ON-";
+    document.getElementById("A0button").value = "Radar panel ON";
   }
 }
 
@@ -325,10 +325,10 @@ function A1_runStop() {
 
   if (g_angle_frame_brake > 0.5) {
     g_angle_frame_brake = 0.0;
-    document.getElementById("A1button").value = "Angle 1 OFF";
+    document.getElementById("A1button").value = "Radar frame OFF";
   } else {
     g_angle_frame_brake = 1.0;
-    document.getElementById("A1button").value = "Angle 1 ON-";
+    document.getElementById("A1button").value = "Radar frame ON";
   }
 }
 
@@ -381,8 +381,12 @@ function myKeyDown(kev) {
       document.getElementById('Speed').innerHTML = "Speed: " + g_angle_plane_rate
       break;
     case "ArrowDown":
-      g_angle_plane_rate -= 10
-      document.getElementById('Speed').innerHTML = "Speed: " + g_angle_plane_rate
+      if (g_angle_plane_rate - 10 > 0) {
+        g_angle_plane_rate -= 10
+        document.getElementById('Speed').innerHTML = "Speed: " + g_angle_plane_rate
+      } else {
+        document.getElementById('Speed').innerHTML = "Speed: too low"
+      }
       break;
     default:
       break;
