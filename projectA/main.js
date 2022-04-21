@@ -1,13 +1,22 @@
 var VSHADER_SOURCE =
+  'uniform mat4 u_ModelMatrix;\n' +
   'attribute vec4 a_Position;\n' +
-  'uniform mat4 u_modelMatrix;\n' +
+  'attribute vec4 a_Color;\n' +
+  'varying vec4 v_Color;\n' +
   'void main() {\n' +
-  '  gl_Position = u_modelMatrix * a_Position;\n' +
+  '  gl_Position = u_ModelMatrix * a_Position;\n' +
+  '  gl_PointSize = 10.0;\n' +
+  '  v_Color = a_Color;\n' +
   '}\n';
 
+// Fragment shader program----------------------------------
 var FSHADER_SOURCE =
+//  '#ifdef GL_ES\n' +
+  'precision mediump float;\n' +
+  //  '#endif GL_ES\n' +
+  'varying vec4 v_Color;\n' +
   'void main() {\n' +
-  '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
+  '  gl_FragColor = v_Color;\n' +
   '}\n';
 
 
@@ -16,6 +25,8 @@ var g_canvasID;
 var g_vertCount;
 var g_body_vertCount;
 var g_paddle_vertCount;
+var g_paddle_vert1Count;
+var g_paddle_vert2Count;
 var g_base_vertCount;
 var g_frame_vertCount;
 var g_panel_vertCount;
@@ -85,9 +96,9 @@ function main() {
   gl.depthFunc(gl.GREATER);
   g_modelMatrix = new Matrix4();
 
-  uLoc_modelMatrix = gl.getUniformLocation(gl.program, 'u_modelMatrix');
+  uLoc_modelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
   if (!uLoc_modelMatrix) {
-    console.log('Failed to get the storage location of u_modelMatrix');
+    console.log('Failed to get the storage location of u_ModelMatrix');
     return;
   }
 
@@ -139,50 +150,60 @@ function timerAll() {
 }
 
 function initVertexBuffers() {
-  var dot1 = [-0.25, -0.25, -0.5, 1.0]
-  var dot2 = [-0.25, 0.25, -0.5, 1.0]
-  var dot3 = [0.25, 0.25, -0.5, 1.0]
-  var dot4 = [0.25, -0.25, -0.5, 1.0]
-  var dot5 = [-0.25, -0.25, 0.5, 1.0]
-  var dot6 = [-0.25, 0.25, 0.5, 1.0]
-  var dot7 = [0.25, 0.25, 0.5, 1.0]
-  var dot8 = [0.25, -0.25, 0.5, 1.0]
+  var dot1 = [-0.25, -0.25, -0.5, 1.0,1,0,0]
+  var dot2 = [-0.25, 0.25, -0.5, 1.0,1,0,0]
+  var dot3 = [0.25, 0.25, -0.5, 1.0,1,0,0]
+  var dot4 = [0.25, -0.25, -0.5, 1.0,1,0,0]
+  var dot5 = [-0.25, -0.25, 0.5, 1.0,1,0,0]
+  var dot6 = [-0.25, 0.25, 0.5, 1.0,1,0,0]
+  var dot7 = [0.25, 0.25, 0.5, 1.0,1,0,0]
+  var dot8 = [0.25, -0.25, 0.5, 1.0,1,0,0]
 
-  var dot21 = [-0.25, -0.25, 0, 1.0]
-  var dot22 = [-0.25, 0.25, 0, 1.0]
-  var dot23 = [0.25, 0.25, 0, 1.0]
-  var dot24 = [0.25, -0.25, 0, 1.0]
-  var dot25 = [-0.25, -0.25, 1, 1.0]
-  var dot26 = [-0.25, 0.25, 1, 1.0]
-  var dot27 = [0.25, 0.25, 1, 1.0]
-  var dot28 = [0.25, -0.25, 1, 1.0]
 
-  var dot31 = [-0.5, -0.5, -0.5, 1.0]
-  var dot32 = [-0.5, 0.5, -0.5, 1.0]
-  var dot33 = [0.5, 0.5, -0.5, 1.0]
-  var dot34 = [0.5, -0.5, -0.5, 1.0]
-  var dot35 = [-0.5, -0.5, 0.5, 1.0]
-  var dot36 = [-0.5, 0.5, 0.5, 1.0]
-  var dot37 = [0.5, 0.5, 0.5, 1.0]
-  var dot38 = [0.5, -0.5, 0.5, 1.0]
+  var dot21 = [0,0,0,1.0,0.4,0.4,0.4]
+  var dot22 = [0,0.2,0.25,1.0,0.7,0.7,0.7]
 
-  var dot41 = [-0.5, -0.5, -0.5, 1.0]
-  var dot42 = [-0.5, 0.5, -0.5, 1.0]
-  var dot43 = [0.5, 0.5, -0.5, 1.0]
-  var dot44 = [0.5, -0.5, -0.5, 1.0]
-  var dot45 = [-0.5, -0.5, 0.5, 1.0]
-  var dot46 = [-0.5, 0.5, 0.5, 1.0]
-  var dot47 = [0.5, 0.5, 0.5, 1.0]
-  var dot48 = [0.5, -0.5, 0.5, 1.0]
+  var dot23 = [-0.05,0.1,1,1.0,0.4,0.4,0.4]
+  var dot24 = [-0.05,0,1,1.0,0.4,0.4,0.4]
+  var dot25 = [0.05,0,1,1.0,0.4,0.4,0.4]
+  var dot26 = [0.05,0.1,1,1.0,0.4,0.4,0.4]
 
-  var dot51 = [-0.5, -0.5, -0.5, 1.0]
-  var dot52 = [-0.5, 0.5, -0.5, 1.0]
-  var dot53 = [0.5, 0.5, -0.5, 1.0]
-  var dot54 = [0.5, -0.5, -0.5, 1.0]
-  var dot55 = [-0.5, -0.5, 0.5, 1.0]
-  var dot56 = [-0.5, 0.5, 0.5, 1.0]
-  var dot57 = [0.5, 0.5, 0.5, 1.0]
-  var dot58 = [0.5, -0.5, 0.5, 1.0]
+  var dot27 = [0,0.17,0.95,1.0,0.7,0.7,0.7]
+
+  let h = 0.5 / 2 * Math.sqrt(3)
+  let r3 = 84/255
+  let g3 = 88/255
+  let b3 = 1/255
+  var dot31 = [-0.5, 2*h, -0.5, 1.0,r3,g3,b3]
+  var dot32 = [0.5, 2*h, -0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
+  var dot33 = [1, 0, -0.5, 1.0,r3,g3,b3]
+  var dot34 = [0.5, -2*h, -0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
+  var dot35 = [-0.5, -2*h, -0.5, 1.0,r3,g3,b3]
+  var dot36 = [-1, 0, -0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
+  var dot37 = [-0.25, h, 0.5, 1.0,r3,g3,b3]
+  var dot38 = [0.25, h, 0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
+  var dot39 = [0.5, 0, 0.5, 1.0,r3,g3,b3]
+  var dot310 = [0.25, -h, 0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
+  var dot311 = [-0.25, -h, 0.5, 1.0,r3,g3,b3]
+  var dot312 = [-0.5, 0, 0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
+
+  var dot41 = [-0.5, -0.5, -0.5, 1.0,1,0,0]
+  var dot42 = [-0.5, 0.5, -0.5, 1.0,1,0,0]
+  var dot43 = [0.5, 0.5, -0.5, 1.0,1,0,0]
+  var dot44 = [0.5, -0.5, -0.5, 1.0,1,0,0]
+  var dot45 = [-0.5, -0.5, 0.5, 1.0,1,0,0]
+  var dot46 = [-0.5, 0.5, 0.5, 1.0,1,0,0]
+  var dot47 = [0.5, 0.5, 0.5, 1.0,1,0,0]
+  var dot48 = [0.5, -0.5, 0.5, 1.0,1,0,0]
+
+  var dot51 = [-0.5, -0.5, -0.5, 1.0,1,0,0]
+  var dot52 = [-0.5, 0.5, -0.5, 1.0,1,0,0]
+  var dot53 = [0.5, 0.5, -0.5, 1.0,1,0,0]
+  var dot54 = [0.5, -0.5, -0.5, 1.0,1,0,0]
+  var dot55 = [-0.5, -0.5, 0.5, 1.0,1,0,0]
+  var dot56 = [-0.5, 0.5, 0.5, 1.0,1,0,0]
+  var dot57 = [0.5, 0.5, 0.5, 1.0,1,0,0]
+  var dot58 = [0.5, -0.5, 0.5, 1.0,1,0,0]
 
   var body_vert = [
     dot1, dot2, dot2, dot3, dot3, dot4, dot4, dot1,
@@ -190,16 +211,15 @@ function initVertexBuffers() {
     dot1, dot5, dot2, dot6, dot3, dot7, dot4, dot8
   ].flat()
 
+  var paddle_vert_1 = [dot21, dot22, dot23, dot24, dot25, dot26, dot22].flat()
+  var paddle_vert_2 = [dot27, dot22, dot23, dot26, dot22].flat()
+
   var paddle_vert = [
-    dot21, dot22, dot22, dot23, dot23, dot24, dot24, dot21,
-    dot25, dot26, dot26, dot27, dot27, dot28, dot28, dot25,
-    dot21, dot25, dot22, dot26, dot23, dot27, dot24, dot28
+    paddle_vert_1, paddle_vert_2
   ].flat()
 
   var base_vert = [
-    dot31, dot32, dot32, dot33, dot33, dot34, dot34, dot31,
-    dot35, dot36, dot36, dot37, dot37, dot38, dot38, dot35,
-    dot31, dot35, dot32, dot36, dot33, dot37, dot34, dot38
+    dot31,dot37,dot32,dot38,dot33,dot39,dot34,dot310,dot35,dot311,dot36,dot312,dot31,dot37,dot312,dot38,dot311,dot39,dot310,dot34,dot33,dot35,dot32,dot36,dot31
   ].flat()
 
   var frame_vert = [
@@ -215,12 +235,15 @@ function initVertexBuffers() {
   ].flat()
 
   var vertices = new Float32Array([body_vert, paddle_vert, base_vert, frame_vert, panel_vert].flat());
-  g_vertCount = vertices.length / 4;
-  g_body_vertCount = body_vert.length / 4;
-  g_paddle_vertCount = paddle_vert.length / 4;
-  g_base_vertCount = base_vert.length / 4
-  g_frame_vertCount = frame_vert.length / 4
-  g_panel_vertCount = panel_vert.length / 4
+  g_vertCount = vertices.length / 7;
+  g_body_vertCount = body_vert.length / 7;
+  console.log(g_body_vertCount)
+  g_paddle_vertCount = paddle_vert.length / 7;
+  g_paddle_vert1Count = paddle_vert_1.length / 7;
+  g_paddle_vert2Count = paddle_vert_2.length / 7;
+  g_base_vertCount = base_vert.length / 7
+  g_frame_vertCount = frame_vert.length / 7
+  g_panel_vertCount = panel_vert.length / 7
 
   var vertexBufferID = gl.createBuffer();
   if (!vertexBufferID) {
@@ -235,8 +258,27 @@ function initVertexBuffers() {
     console.log('Failed to get the storage location of a_Position');
     return -2;
   }
-  gl.vertexAttribPointer(aLoc_Position, 4, gl.FLOAT, false, 0, 0);
+  var FSIZE = vertices.BYTES_PER_ELEMENT; // how many bytes per stored value?
+
+  gl.vertexAttribPointer(aLoc_Position, 4, gl.FLOAT, false, FSIZE * 7, 0);
   gl.enableVertexAttribArray(aLoc_Position);
+  var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+  if(a_Color < 0) {
+    console.log('Failed to get the storage location of a_Color');
+    return -1;
+  }
+  // Use handle to specify how to retrieve color data from our VBO:
+  gl.vertexAttribPointer(
+    a_Color, 				// choose Vertex Shader attribute to fill with data
+    3, 							// how many values? 1,2,3 or 4. (we're using R,G,B)
+    gl.FLOAT, 			// data type for each value: usually gl.FLOAT
+    false, 					// did we supply fixed-point data AND it needs normalizing?
+    FSIZE * 7, 			// Stride -- how many bytes used to store each vertex?
+    // (x,y,z,w, r,g,b) * bytes/value
+    FSIZE * 4);			// Offset -- how many bytes from START of buffer to the
+  // value we will actually use?  Need to skip over x,y,z,w
+  gl.enableVertexAttribArray(a_Color);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
   return 0;
 }
 
@@ -267,7 +309,7 @@ function drawPlane() {
   g_modelMatrix.rotate(90, 0, 1, 0);
   drawBody();
   g_modelMatrix.translate(0, 0, 0.5);
-  g_modelMatrix.scale(0.2, 0.2, 0.2)
+  g_modelMatrix.scale(0.5, 0.5, 0.5)
   g_modelMatrix.rotate(90, 0, 1, 0);
   g_modelMatrix.rotate(g_angle_paddle_now, 1, 0, 0);
   drawPaddle()
@@ -300,12 +342,13 @@ function drawBody() {
 
 function drawPaddle() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
-  gl.drawArrays(gl.LINES, g_body_vertCount, g_paddle_vertCount);
+  gl.drawArrays(gl.TRIANGLE_FAN, g_body_vertCount, g_paddle_vert1Count);
+  gl.drawArrays(gl.TRIANGLE_FAN, g_body_vertCount + g_paddle_vert1Count, g_paddle_vert2Count);
 }
 
 function drawBase() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
-  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount, g_base_vertCount);
+  gl.drawArrays(gl.TRIANGLE_STRIP, g_body_vertCount + g_paddle_vertCount, g_base_vertCount);
 }
 
 function drawFrame() {
