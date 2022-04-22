@@ -90,7 +90,7 @@ function main() {
     return;
   }
 
-  gl.clearColor(0, 0, 0, 1);
+  gl.clearColor(135/255,206/255,250/255, 1);
   gl.enable(gl.DEPTH_TEST);
   gl.clearDepth(0.0);
   gl.depthFunc(gl.GREATER);
@@ -150,14 +150,24 @@ function timerAll() {
 }
 
 function initVertexBuffers() {
-  var dot1 = [-0.25, -0.25, -0.5, 1.0,1,0,0]
-  var dot2 = [-0.25, 0.25, -0.5, 1.0,1,0,0]
-  var dot3 = [0.25, 0.25, -0.5, 1.0,1,0,0]
-  var dot4 = [0.25, -0.25, -0.5, 1.0,1,0,0]
-  var dot5 = [-0.25, -0.25, 0.5, 1.0,1,0,0]
-  var dot6 = [-0.25, 0.25, 0.5, 1.0,1,0,0]
-  var dot7 = [0.25, 0.25, 0.5, 1.0,1,0,0]
-  var dot8 = [0.25, -0.25, 0.5, 1.0,1,0,0]
+  let r = 164/255
+  let g = 168/255
+  let b = 168/255
+  var dot1 = [0, 0, 0.5, 1.0,r*1.3,g*1.3,b*1.3]
+  var dot2 = [-0.05, 0.05, 0.4, 1.0,r,g,b]
+  var dot3 = [-0.05, -0.05, 0.4, 1.0,r*1.3,g*1.3,b*1.3]
+  var dot4 = [0.05, -0.05, 0.4, 1.0,r,g,b]
+  var dot5 = [0.05, 0.05, 0.4, 1.0,r*1.3,g*1.3,b*1.3]
+  var dot6 = [-0.5, -0.05, -0.3, 1.0,r*1.3,g*1.3,b*1.3]
+  var dot7 = [-0.05, 0.025, -0.3, 1.0,r,g,b]
+  var dot8 = [-0.05, -0.05, -0.3, 1.0,r,g,b]
+  var dot9 = [0.05, -0.05, -0.3, 1.0,r,g,b]
+  var dot10 = [0.05, 0.025, -0.3, 1.0,r*1.3,g*1.3,b*1.3]
+  var dot11 = [0.5, -0.05, -0.3, 1.0,r,g,b]
+  var dot12 = [-0.05, 0.05, -0.5, 1.0,r,g,b]
+  var dot13 = [-0.05, -0.05, -0.5, 1.0,r,g,b]
+  var dot14 = [0.05, -0.05, -0.5, 1.0,r*1.3,g*1.3,b*1.3]
+  var dot15 = [0.05, 0.05, -0.5, 1.0,r*1.3,g*1.3,b*1.3]
 
 
   var dot21 = [0,0,0,1.0,0.4,0.4,0.4]
@@ -235,9 +245,7 @@ function initVertexBuffers() {
   var dot512 = [-0.5, 0, 0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
 
   var body_vert = [
-    dot1, dot2, dot2, dot3, dot3, dot4, dot4, dot1,
-    dot5, dot6, dot6, dot7, dot7, dot8, dot8, dot5,
-    dot1, dot5, dot2, dot6, dot3, dot7, dot4, dot8
+    dot1,dot3,dot4,dot5,dot1,dot2,dot3,dot12,dot13,dot15,dot14,dot5,dot4,dot3,dot14,dot13,dot12,dot15,dot2,dot5,dot4,dot10,dot11,dot9,dot4,dot3,dot7,dot6,dot8,dot3
   ].flat()
 
   var paddle_vert_1 = [dot21, dot22, dot23, dot24, dot25, dot26, dot22].flat()
@@ -316,14 +324,14 @@ function drawAll() {
   g_modelMatrix.rotate(dist * 50.0, -g_yMdragTot + 0.0001, g_xMdragTot + 0.0001, 0.0);
 
   pushMatrix(g_modelMatrix);
-  g_modelMatrix.translate(Math.sin(g_angle_plane_now / 180.0 * Math.PI) * 0.5, 0.3, Math.cos(g_angle_plane_now / 180.0 * Math.PI) * 0.5);
+  g_modelMatrix.translate(Math.sin(g_angle_plane_now / 180.0 * Math.PI) * 0.5, 0.5, Math.cos(g_angle_plane_now / 180.0 * Math.PI) * 0.5);
   g_modelMatrix.rotate(g_angle_plane_now, 0, 1, 0)
-  g_modelMatrix.scale(0.3, 0.3, 0.3);
+  g_modelMatrix.scale(0.4, 0.4, 0.4);
   drawPlane();
   g_modelMatrix = popMatrix();
 
   pushMatrix(g_modelMatrix);
-  g_modelMatrix.translate(0, -0.3, 0);
+  g_modelMatrix.translate(0, -0.5, 0);
   drawRadar()
   g_modelMatrix = popMatrix();
 }
@@ -334,7 +342,7 @@ function drawPlane() {
   g_modelMatrix.rotate(90, 0, 1, 0);
   drawBody();
   g_modelMatrix.translate(0, 0, 0.5);
-  g_modelMatrix.scale(0.5, 0.5, 0.5)
+  g_modelMatrix.scale(0.15, 0.15, 0.15)
   g_modelMatrix.rotate(90, 0, 1, 0);
   g_modelMatrix.rotate(g_angle_paddle_now, 1, 0, 0);
   drawPaddle()
@@ -362,7 +370,7 @@ function drawRadar() {
 
 function drawBody() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
-  gl.drawArrays(gl.LINES, 0, g_body_vertCount);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, g_body_vertCount);
 }
 
 function drawPaddle() {
@@ -461,9 +469,12 @@ function myMouseUp(ev) {
     (g_canvasID.height / 2);
   console.log('myMouseUp  (CVV coords  ):\n\t x, y=\t', x, ',\t', y);
   g_isDrag = false;
-  g_isSlide = false;
-  g_xMdragTot += (x - g_xMclik);
-  g_yMdragTot += (y - g_yMclik);
+  if (g_isSlide) {
+    g_isSlide = false;
+  } else{
+    g_xMdragTot += (x - g_xMclik);
+    g_yMdragTot += (y - g_yMclik);
+  }
 }
 
 function myKeyDown(kev) {
