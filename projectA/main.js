@@ -187,23 +187,52 @@ function initVertexBuffers() {
   var dot311 = [-0.25, -h, 0.5, 1.0,r3,g3,b3]
   var dot312 = [-0.5, 0, 0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
 
-  var dot41 = [-0.5, -0.5, -0.5, 1.0,1,0,0]
-  var dot42 = [-0.5, 0.5, -0.5, 1.0,1,0,0]
-  var dot43 = [0.5, 0.5, -0.5, 1.0,1,0,0]
-  var dot44 = [0.5, -0.5, -0.5, 1.0,1,0,0]
-  var dot45 = [-0.5, -0.5, 0.5, 1.0,1,0,0]
-  var dot46 = [-0.5, 0.5, 0.5, 1.0,1,0,0]
-  var dot47 = [0.5, 0.5, 0.5, 1.0,1,0,0]
-  var dot48 = [0.5, -0.5, 0.5, 1.0,1,0,0]
+  let r4 = 74/255
+  let g4 = 78/255
+  let b4 = 0
+  var dot41 = [-0.25, -0.25, -0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot42 = [-0.25, 0.25, -0.5, 1.0,r4,g4,b4]
+  var dot43 = [0.25, 0.25, -0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot44 = [0.25, -0.25, -0.5, 1.0,r4,g4,b4]
+  var dot45 = [-0.25, -0.25, -0.3, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot46 = [-0.25, 0.25, -0.3, 1.0,r4,g4,b4]
+  var dot47 = [0.25, 0.25, -0.3, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot48 = [0.25, -0.25, -0.3, 1.0,r4,g4,b4]
+  var dot49 = [0, -0.25, -0.3, 1.0,r4,g4,b4]
+  var dot410 = [0, 0.25, -0.3, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot411 = [-0.75, -0.25, -0.1, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot412 = [-0.75, 0.25, -0.1, 1.0,r4,g4,b4]
+  var dot413 = [-0.5, 0.25, -0.1, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot414 = [-0.5, -0.25, -0.1, 1.0,r4,g4,b4]
+  var dot415 = [0.5, -0.25, -0.1, 1.0,r4,g4,b4]
+  var dot416 = [0.5, 0.25, -0.1, 1.0,r4,g4,b4]
+  var dot417 = [0.75, 0.25, -0.1, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot418 = [0.75, -0.25, -0.1, 1.0,r4,g4,b4]
+  var dot419 = [-0.75, -0.25, 0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot420 = [-0.75, 0.25, 0.5, 1.0,r4,g4,b4]
+  var dot421 = [-0.5, 0.25, 0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot422 = [-0.5, -0.25, 0.5, 1.0,r4,g4,b4]
+  var dot423 = [0.5, -0.25, 0.5, 1.0,r4,g4,b4]
+  var dot424 = [0.5, 0.25, 0.5, 1.0,r4,g4,b4]
+  var dot425 = [0.75, 0.25, 0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
+  var dot426 = [0.75, -0.25, 0.5, 1.0,r4,g4,b4]
 
-  var dot51 = [-0.5, -0.5, -0.5, 1.0,1,0,0]
-  var dot52 = [-0.5, 0.5, -0.5, 1.0,1,0,0]
-  var dot53 = [0.5, 0.5, -0.5, 1.0,1,0,0]
-  var dot54 = [0.5, -0.5, -0.5, 1.0,1,0,0]
-  var dot55 = [-0.5, -0.5, 0.5, 1.0,1,0,0]
-  var dot56 = [-0.5, 0.5, 0.5, 1.0,1,0,0]
-  var dot57 = [0.5, 0.5, 0.5, 1.0,1,0,0]
-  var dot58 = [0.5, -0.5, 0.5, 1.0,1,0,0]
+  let h5 = 0.5 / 2 * Math.sqrt(3)
+  let r5 = 134/255
+  let g5 = 138/255
+  let b5 = 138/255
+  var dot51 = [-0.25, h5, -0.1, 1.0,r5,g5,b5]
+  var dot52 = [0.25, h5, -0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
+  var dot53 = [0.5, 0, -0.1, 1.0,r5,g5,b5]
+  var dot54 = [0.25, -h5, -0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
+  var dot55 = [-0.25, -h5, -0.1, 1.0,r5,g5,b5]
+  var dot56 = [-0.5, 0, -0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
+  var dot57 = [-0.25, h5, 0.1, 1.0,r5,g5,b5]
+  var dot58 = [0.25, h5, 0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
+  var dot59 = [0.5, 0, 0.1, 1.0,r5,g5,b5]
+  var dot510 = [0.25, -h5, 0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
+  var dot511 = [-0.25, -h5, 0.1, 1.0,r5,g5,b5]
+  var dot512 = [-0.5, 0, 0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
 
   var body_vert = [
     dot1, dot2, dot2, dot3, dot3, dot4, dot4, dot1,
@@ -223,15 +252,11 @@ function initVertexBuffers() {
   ].flat()
 
   var frame_vert = [
-    dot41, dot42, dot42, dot43, dot43, dot44, dot44, dot41,
-    dot45, dot46, dot46, dot47, dot47, dot48, dot48, dot45,
-    dot41, dot45, dot42, dot46, dot43, dot47, dot44, dot48
+    dot41,dot42,dot45,dot46,dot411,dot412,dot419,dot420,dot422,dot421,dot414,dot413,dot49,dot410,dot415,dot416,dot423,dot424,dot426,dot425,dot418,dot417,dot48,dot47,dot44,dot43,dot41,dot42,dot43,dot46,dot47,dot410,dot417,dot416,dot425,dot424,dot417,dot416,dot47,dot410,dot46,dot413,dot412,dot421,dot420,dot422,dot419,dot414,dot411,dot49,dot45,dot48,dot41,dot44,dot45,dot48,dot49,dot418,dot415,dot426,dot423
   ].flat()
 
   var panel_vert = [
-    dot51, dot52, dot52, dot53, dot53, dot54, dot54, dot51,
-    dot55, dot56, dot56, dot57, dot57, dot58, dot58, dot55,
-    dot51, dot55, dot52, dot56, dot53, dot57, dot54, dot58
+    dot51,dot57,dot52,dot58,dot53,dot59,dot54,dot510,dot55,dot511,dot56,dot512,dot51,dot57,dot512,dot58,dot511,dot59,dot510,dot54,dot53,dot55,dot52,dot56,dot51
   ].flat()
 
   var vertices = new Float32Array([body_vert, paddle_vert, base_vert, frame_vert, panel_vert].flat());
@@ -331,7 +356,7 @@ function drawRadar() {
   g_modelMatrix.translate(0, 0, 0.5);
   g_modelMatrix.rotate(g_angle_panel_now, 1, 0, 0)
   g_modelMatrix.rotate(g_angle_panel_aspect - 90, 1, 0, 0)
-  g_modelMatrix.scale(0.5, 0.5, 0.5);
+  // g_modelMatrix.scale(0.5, 0.5, 0.5);
   drawPanel()
 }
 
@@ -353,12 +378,12 @@ function drawBase() {
 
 function drawFrame() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
-  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount, g_frame_vertCount);
+  gl.drawArrays(gl.TRIANGLE_STRIP, g_body_vertCount + g_paddle_vertCount + g_base_vertCount, g_frame_vertCount);
 }
 
 function drawPanel() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
-  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount, g_panel_vertCount);
+  gl.drawArrays(gl.TRIANGLE_STRIP, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount, g_panel_vertCount);
 }
 
 function panel_runStop() {
