@@ -35,7 +35,7 @@ var uLoc_modelMatrix;
 var g_lastMS = Date.now();
 
 var g_angle_paddle_now = 0.0;
-var g_angle_paddle_rate = 1000.0;
+var g_angle_paddle_rate = 2000.0;
 
 var g_angle_plane_now = 0.0;
 var g_angle_plane_rate = 90.0;
@@ -159,10 +159,10 @@ function initVertexBuffers() {
   var dot4 = [0.05, -0.05, 0.4, 1.0,r,g,b]
   var dot5 = [0.05, 0.05, 0.4, 1.0,r*1.3,g*1.3,b*1.3]
   var dot6 = [-0.5, -0.05, -0.3, 1.0,r*1.3,g*1.3,b*1.3]
-  var dot7 = [-0.05, 0.025, -0.3, 1.0,r,g,b]
+  var dot7 = [-0.05, 0.005, -0.3, 1.0,r,g,b]
   var dot8 = [-0.05, -0.05, -0.3, 1.0,r,g,b]
   var dot9 = [0.05, -0.05, -0.3, 1.0,r,g,b]
-  var dot10 = [0.05, 0.025, -0.3, 1.0,r*1.3,g*1.3,b*1.3]
+  var dot10 = [0.05, 0.005, -0.3, 1.0,r*1.3,g*1.3,b*1.3]
   var dot11 = [0.5, -0.05, -0.3, 1.0,r,g,b]
   var dot12 = [-0.05, 0.05, -0.5, 1.0,r,g,b]
   var dot13 = [-0.05, -0.05, -0.5, 1.0,r,g,b]
@@ -248,11 +248,8 @@ function initVertexBuffers() {
     dot1,dot3,dot4,dot5,dot1,dot2,dot3,dot12,dot13,dot15,dot14,dot5,dot4,dot3,dot14,dot13,dot12,dot15,dot2,dot5,dot4,dot10,dot11,dot9,dot4,dot3,dot7,dot6,dot8,dot3
   ].flat()
 
-  var paddle_vert_1 = [dot21, dot22, dot23, dot24, dot25, dot26, dot22].flat()
-  var paddle_vert_2 = [dot27, dot22, dot23, dot26, dot22].flat()
-
   var paddle_vert = [
-    paddle_vert_1, paddle_vert_2
+    dot24,dot21,dot23,dot22,dot27,dot22,dot26,dot21,dot25,dot24,dot23,dot26,dot25
   ].flat()
 
   var base_vert = [
@@ -272,8 +269,6 @@ function initVertexBuffers() {
   g_body_vertCount = body_vert.length / 7;
   console.log(g_body_vertCount)
   g_paddle_vertCount = paddle_vert.length / 7;
-  g_paddle_vert1Count = paddle_vert_1.length / 7;
-  g_paddle_vert2Count = paddle_vert_2.length / 7;
   g_base_vertCount = base_vert.length / 7
   g_frame_vertCount = frame_vert.length / 7
   g_panel_vertCount = panel_vert.length / 7
@@ -375,8 +370,7 @@ function drawBody() {
 
 function drawPaddle() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
-  gl.drawArrays(gl.TRIANGLE_FAN, g_body_vertCount, g_paddle_vert1Count);
-  gl.drawArrays(gl.TRIANGLE_FAN, g_body_vertCount + g_paddle_vert1Count, g_paddle_vert2Count);
+  gl.drawArrays(gl.TRIANGLE_STRIP, g_body_vertCount, g_paddle_vertCount);
 }
 
 function drawBase() {
