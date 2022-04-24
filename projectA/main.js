@@ -25,8 +25,6 @@ var g_canvasID;
 var g_vertCount;
 var g_body_vertCount;
 var g_paddle_vertCount;
-var g_paddle_vert1Count;
-var g_paddle_vert2Count;
 var g_base_vertCount;
 var g_frame_vertCount;
 var g_panel_vertCount;
@@ -150,82 +148,10 @@ function timerAll() {
 }
 
 function initVertexBuffers() {
-  let r = 164/255
-  let g = 168/255
-  let b = 168/255
-  var dot1 = [0, 0, 0.5, 1.0,r*1.3,g*1.3,b*1.3]
-  var dot2 = [-0.05, 0.05, 0.4, 1.0,r,g,b]
-  var dot3 = [-0.05, -0.05, 0.4, 1.0,r*1.3,g*1.3,b*1.3]
-  var dot4 = [0.05, -0.05, 0.4, 1.0,r,g,b]
-  var dot5 = [0.05, 0.05, 0.4, 1.0,r*1.3,g*1.3,b*1.3]
-  var dot6 = [-0.5, -0.05, -0.3, 1.0,r*1.3,g*1.3,b*1.3]
-  var dot7 = [-0.05, 0.005, -0.3, 1.0,r,g,b]
-  var dot8 = [-0.05, -0.05, -0.3, 1.0,r,g,b]
-  var dot9 = [0.05, -0.05, -0.3, 1.0,r,g,b]
-  var dot10 = [0.05, 0.005, -0.3, 1.0,r*1.3,g*1.3,b*1.3]
-  var dot11 = [0.5, -0.05, -0.3, 1.0,r,g,b]
-  var dot12 = [-0.05, 0.05, -0.5, 1.0,r,g,b]
-  var dot13 = [-0.05, -0.05, -0.5, 1.0,r,g,b]
-  var dot14 = [0.05, -0.05, -0.5, 1.0,r*1.3,g*1.3,b*1.3]
-  var dot15 = [0.05, 0.05, -0.5, 1.0,r*1.3,g*1.3,b*1.3]
-
-
-  var dot21 = [0,0,0,1.0,0.4,0.4,0.4]
-  var dot22 = [0,0.2,0.25,1.0,0.7,0.7,0.7]
-
-  var dot23 = [-0.05,0.1,1,1.0,0.4,0.4,0.4]
-  var dot24 = [-0.05,0,1,1.0,0.4,0.4,0.4]
-  var dot25 = [0.05,0,1,1.0,0.4,0.4,0.4]
-  var dot26 = [0.05,0.1,1,1.0,0.4,0.4,0.4]
-
-  var dot27 = [0,0.17,0.95,1.0,0.7,0.7,0.7]
-
-  let h = 0.5 / 2 * Math.sqrt(3)
-  let r3 = 84/255
-  let g3 = 88/255
-  let b3 = 1/255
-  var dot31 = [-0.5, 2*h, -0.5, 1.0,r3,g3,b3]
-  var dot32 = [0.5, 2*h, -0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
-  var dot33 = [1, 0, -0.5, 1.0,r3,g3,b3]
-  var dot34 = [0.5, -2*h, -0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
-  var dot35 = [-0.5, -2*h, -0.5, 1.0,r3,g3,b3]
-  var dot36 = [-1, 0, -0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
-  var dot37 = [-0.25, h, 0.5, 1.0,r3,g3,b3]
-  var dot38 = [0.25, h, 0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
-  var dot39 = [0.5, 0, 0.5, 1.0,r3,g3,b3]
-  var dot310 = [0.25, -h, 0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
-  var dot311 = [-0.25, -h, 0.5, 1.0,r3,g3,b3]
-  var dot312 = [-0.5, 0, 0.5, 1.0,r3*1.3,g3*1.3,b3*1.3]
-
-  let r4 = 74/255
-  let g4 = 78/255
-  let b4 = 0
-  var dot41 = [-0.25, -0.25, -0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot42 = [-0.25, 0.25, -0.5, 1.0,r4,g4,b4]
-  var dot43 = [0.25, 0.25, -0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot44 = [0.25, -0.25, -0.5, 1.0,r4,g4,b4]
-  var dot45 = [-0.25, -0.25, -0.3, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot46 = [-0.25, 0.25, -0.3, 1.0,r4,g4,b4]
-  var dot47 = [0.25, 0.25, -0.3, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot48 = [0.25, -0.25, -0.3, 1.0,r4,g4,b4]
-  var dot49 = [0, -0.25, -0.3, 1.0,r4,g4,b4]
-  var dot410 = [0, 0.25, -0.3, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot411 = [-0.75, -0.25, -0.1, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot412 = [-0.75, 0.25, -0.1, 1.0,r4,g4,b4]
-  var dot413 = [-0.5, 0.25, -0.1, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot414 = [-0.5, -0.25, -0.1, 1.0,r4,g4,b4]
-  var dot415 = [0.5, -0.25, -0.1, 1.0,r4,g4,b4]
-  var dot416 = [0.5, 0.25, -0.1, 1.0,r4,g4,b4]
-  var dot417 = [0.75, 0.25, -0.1, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot418 = [0.75, -0.25, -0.1, 1.0,r4,g4,b4]
-  var dot419 = [-0.75, -0.25, 0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot420 = [-0.75, 0.25, 0.5, 1.0,r4,g4,b4]
-  var dot421 = [-0.5, 0.25, 0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot422 = [-0.5, -0.25, 0.5, 1.0,r4,g4,b4]
-  var dot423 = [0.5, -0.25, 0.5, 1.0,r4,g4,b4]
-  var dot424 = [0.5, 0.25, 0.5, 1.0,r4,g4,b4]
-  var dot425 = [0.75, 0.25, 0.5, 1.0,r4*1.3,g4*1.3,b4*1.3]
-  var dot426 = [0.75, -0.25, 0.5, 1.0,r4,g4,b4]
+  var body_vert = generateBodyVert();
+  var paddle_vert = generatePaddleVert();
+  var base_vert = generateBaseVert();
+  var frame_vert = generateFrameVert();
 
   let h5 = 0.5 / 2 * Math.sqrt(3)
   let r5 = 134/255
@@ -243,22 +169,6 @@ function initVertexBuffers() {
   var dot510 = [0.25, -h5, 0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
   var dot511 = [-0.25, -h5, 0.1, 1.0,r5,g5,b5]
   var dot512 = [-0.5, 0, 0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
-
-  var body_vert = [
-    dot1,dot3,dot4,dot5,dot1,dot2,dot3,dot12,dot13,dot15,dot14,dot5,dot4,dot3,dot14,dot13,dot12,dot15,dot2,dot5,dot4,dot10,dot11,dot9,dot4,dot3,dot7,dot6,dot8,dot3
-  ].flat()
-
-  var paddle_vert = [
-    dot24,dot21,dot23,dot22,dot27,dot22,dot26,dot21,dot25,dot24,dot23,dot26,dot25
-  ].flat()
-
-  var base_vert = [
-    dot31,dot37,dot32,dot38,dot33,dot39,dot34,dot310,dot35,dot311,dot36,dot312,dot31,dot37,dot312,dot38,dot311,dot39,dot310,dot34,dot33,dot35,dot32,dot36,dot31
-  ].flat()
-
-  var frame_vert = [
-    dot41,dot42,dot45,dot46,dot411,dot412,dot419,dot420,dot422,dot421,dot414,dot413,dot49,dot410,dot415,dot416,dot423,dot424,dot426,dot425,dot418,dot417,dot48,dot47,dot44,dot43,dot41,dot42,dot43,dot46,dot47,dot410,dot417,dot416,dot425,dot424,dot417,dot416,dot47,dot410,dot46,dot413,dot412,dot421,dot420,dot422,dot419,dot414,dot411,dot49,dot45,dot48,dot41,dot44,dot45,dot48,dot49,dot418,dot415,dot426,dot423
-  ].flat()
 
   var panel_vert = [
     dot51,dot57,dot52,dot58,dot53,dot59,dot54,dot510,dot55,dot511,dot56,dot512,dot51,dot57,dot512,dot58,dot511,dot59,dot510,dot54,dot53,dot55,dot52,dot56,dot51
