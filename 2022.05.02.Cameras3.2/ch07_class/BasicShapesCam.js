@@ -16,13 +16,15 @@
 //			to build a cylinder, sphere, and torus.
 //
 // Vertex shader program----------------------------------
-var VSHADER_SOURCE = 
+var VSHADER_SOURCE =
+	'uniform mat4 u_ViewMatrix;\n' +
+	'uniform mat4 u_ProjMatrix;\n' +
   'uniform mat4 u_ModelMatrix;\n' +
   'attribute vec4 a_Position;\n' +
   'attribute vec4 a_Color;\n' +
   'varying vec4 v_Color;\n' +
   'void main() {\n' +
-  '  gl_Position = u_ModelMatrix * a_Position;\n' +
+  '  gl_Position = u_ProjMatrix * u_ViewMatrix * u_ModelMatrix * a_Position;\n' +
   '  gl_PointSize = 10.0;\n' +
   '  v_Color = a_Color;\n' +
   '}\n';
@@ -83,24 +85,20 @@ function main() {
 //      (e.g. Matrix4 member functions 'perspective(), frustum(), ortho() ...)
 //======================REVERSED-DEPTH Correction===============================
 
-  //  b) reverse the usage of the depth-buffer's stored values, like this:
-  gl.enable(gl.DEPTH_TEST); // enabled by default, but let's be SURE.
-  gl.clearDepth(0.0);       // each time we 'clear' our depth buffer, set all
-                            // pixel depths to 0.0  (1.0 is DEFAULT)
-  gl.depthFunc(gl.GREATER); // draw a pixel only if its depth value is GREATER
-                            // than the depth buffer's stored value.
-                            // (gl.LESS is DEFAULT; reverse it!)
 //=====================================================================
 
   // Get handle to graphics system's storage location of u_ModelMatrix
   var u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
-  if (!u_ModelMatrix) { 
+	var u_ViewMatrix  = gl.getUniformLocation(gl.program, 'u_ViewMatrix');
+	var u_ProjMatrix  = gl.getUniformLocation(gl.program, 'u_ProjMatrix');
+	if (!u_ModelMatrix || !u_ViewMatrix || !u_ProjMatrix) {
     console.log('Failed to get the storage location of u_ModelMatrix');
     return;
   }
   // Create a local version of our model matrix in JavaScript 
   var modelMatrix = new Matrix4();
-  
+	var viewMatrix = new Matrix4();
+	var projMatrix = new Matrix4();
   // Create, init current rotation angle value in JavaScript
   var currentAngle = 0.0;
 
@@ -108,7 +106,7 @@ function main() {
   // Start drawing: create 'tick' variable whose value is this function:
   var tick = function() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
-    drawAll(gl, n, currentAngle, modelMatrix, u_ModelMatrix);   // Draw shapes
+    drawAll(gl, n, currentAngle, modelMatrix, viewMatrix, projMatrix, u_ModelMatrix, u_ViewMatrix, u_ProjMatrix);   // Draw shapes
     // report current angle on console
     //console.log('currentAngle=',currentAngle);
     requestAnimationFrame(tick, canvas);   
@@ -588,7 +586,7 @@ function makeGroundGrid() {
 	}
 }
 
-function drawAll(gl, n, currentAngle, modelMatrix, u_ModelMatrix) {
+function drawAll(gl, n, currentAngle, modelMatrix, viewMatrix, projMatrix, u_ModelMatrix, u_ViewMatrix, u_ProjMatrix) {
 //==============================================================================
   // Clear <canvas>  colors AND the depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -602,6 +600,8 @@ function drawAll(gl, n, currentAngle, modelMatrix, u_ModelMatrix) {
                         		??);  // camera z-far distance (always positive; frustum ends at z = -zfar)
 
 */
+	projMatrix.setPerspective(42.0, 1.0, 1.0, 1000.0);
+	gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
 
 /*
 //  STEP 1:
@@ -624,7 +624,8 @@ function drawAll(gl, n, currentAngle, modelMatrix, u_ModelMatrix) {
                       ??, ??, ??,	// look-at point 
                       ??, ??, ??);	// View UP vector.
 */
-
+	viewMatrix.setLookAt(5,5,3, -1,-2,-0.5, 0,0,1);
+	gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
   //===========================================================
   //
   pushMatrix(modelMatrix);     // SAVE world coord system;
