@@ -613,7 +613,7 @@ function drawAll(gl, n, currentAngle, modelMatrix, viewMatrix, projMatrix, u_Mod
                       ??, ??, ??,	// look-at point 
                       ??, ??, ??);	// View UP vector.
 */
-
+	// viewMatrix.setLookAt(5,5,3, -1,-2,-0.5, 0,0,1);
 /*
 // STEP 3: 
 //Replace the temporary view matrix with your final view matrix...
