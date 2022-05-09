@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Plane and Radar</title>
+</head>
+
+<body onload="main()">
+<canvas id="webgl" width="800" height="800">
+    Please use a browser that supports "canvas"
+</canvas>
+<br>
+<p>
+    Drag mouse to change aspect <br>
+    press "up" to speed up the plane, press "down" to slow down the plane <br>
+    <span id='Speed'> Speed:    </span> <br>
+    <label>
+        Radar Range:
+        <input class="slider" type="range" min="15" max="120" value="30" oninput="update_panel_range(this.value)">
+        <span id='Range'>30</span>
+    </label> <br>
+    <label>
+        Radar Aspect:
+        <input class="slider" type="range" min="0" max="180" value="90" oninput="update_panel_aspect(this.value)">
+        <span id='Aspect'>90</span>
+    </label> <br>
+    <input type="button" id="A0button" onclick="panel_runStop()" value="Radar panel ON">
+    <input type="button" id="A1button" onclick="frame_runStop()" value="Radar frame ON">
+</p>
+<script src="lib/webgl-utils.js"></script>
+<script src="lib/webgl-debug.js"></script>
+<script src="lib/cuon-utils.js"></script>
+<script src="lib/cuon-matrix-quat03.js"></script>
+<script src="main.js"></script>
+<script src="plane_body.js"></script>
+<script src="plane_paddle.js"></script>
+<script src="radar_base.js"></script>
+<script src="radar_frame.js"></script>
+
+</body>
+</html>
