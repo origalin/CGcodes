@@ -19,7 +19,6 @@ var FSHADER_SOURCE =
   '  gl_FragColor = v_Color;\n' +
   '}\n';
 
-
 var gl;
 var g_canvasID;
 var g_vertCount;
@@ -28,6 +27,7 @@ var g_paddle_vertCount;
 var g_base_vertCount;
 var g_frame_vertCount;
 var g_panel_vertCount;
+var g_ground_vertCount;
 var g_modelMatrix;
 var uLoc_modelMatrix;
 var g_lastMS = Date.now();
@@ -63,14 +63,12 @@ function main() {
   window.addEventListener("mousemove", myMouseMove);
   window.addEventListener("mouseup", myMouseUp);
   window.addEventListener("keydown", myKeyDown, false);
+
   document.getElementById('Speed').innerHTML = "Speed: " + g_angle_plane_rate
 
   g_canvasID = document.getElementById('webgl');
 
-  g_canvasID.width = window.innerHeight * 0.7
-  g_canvasID.height = g_canvasID.width
-
-  gl = g_canvasID.getContext("webgl", {preserveDrawingBuffer: true});
+  gl = g_canvasID.getContext("webgl");
 
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL. Bye!');
@@ -88,10 +86,10 @@ function main() {
     return;
   }
 
-  gl.clearColor(135/255,206/255,250/255, 1);
+  gl.clearColor(0/255,0/255,0/255, 1);
   gl.enable(gl.DEPTH_TEST);
-  gl.clearDepth(0.0);
-  gl.depthFunc(gl.GREATER);
+  // gl.clearDepth(0.0);
+  // gl.depthFunc(gl.GREATER);
   g_modelMatrix = new Matrix4();
 
   uLoc_modelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
@@ -106,6 +104,10 @@ function main() {
     drawAll();
   };
   tick();
+
+
+  window.addEventListener('resize', resizeCanvas, false);
+  resizeCanvas()
 }
 
 function timerAll() {
@@ -152,6 +154,7 @@ function initVertexBuffers() {
   var paddle_vert = generatePaddleVert();
   var base_vert = generateBaseVert();
   var frame_vert = generateFrameVert();
+  var ground_vert = Array.from(makeGroundGrid());
 
   let h5 = 0.5 / 2 * Math.sqrt(3)
   let r5 = 134/255
@@ -174,14 +177,15 @@ function initVertexBuffers() {
     dot51,dot57,dot52,dot58,dot53,dot59,dot54,dot510,dot55,dot511,dot56,dot512,dot51,dot57,dot512,dot58,dot511,dot59,dot510,dot54,dot53,dot55,dot52,dot56,dot51
   ].flat()
 
-  var vertices = new Float32Array([body_vert, paddle_vert, base_vert, frame_vert, panel_vert].flat());
+  var vertices = new Float32Array([body_vert, paddle_vert, base_vert, frame_vert, panel_vert, ground_vert].flat());
   g_vertCount = vertices.length / 7;
   g_body_vertCount = body_vert.length / 7;
-  console.log(g_body_vertCount)
   g_paddle_vertCount = paddle_vert.length / 7;
   g_base_vertCount = base_vert.length / 7
   g_frame_vertCount = frame_vert.length / 7
   g_panel_vertCount = panel_vert.length / 7
+  g_ground_vertCount = ground_vert.length / 7
+  console.log(g_ground_vertCount)
 
   var vertexBufferID = gl.createBuffer();
   if (!vertexBufferID) {
@@ -223,10 +227,41 @@ function initVertexBuffers() {
 function drawAll() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   g_modelMatrix.setIdentity();
+  //----------------------Create, fill UPPER viewport------------------------
+  gl.viewport(0,											// Viewport lower-left corner
+    g_canvasID.height/2, 			// location(in pixels)
+    g_canvasID.width, 				// viewport width,
+    g_canvasID.height/2);			// viewport height in pixels.
 
-  g_modelMatrix.rotate(15, 1, 1, 0);
-  var dist = Math.sqrt(g_xMdragTot * g_xMdragTot + g_yMdragTot * g_yMdragTot);
-  g_modelMatrix.rotate(dist * 50.0, -g_yMdragTot + 0.0001, g_xMdragTot + 0.0001, 0.0);
+  var vpAspect = g_canvasID.width/2/			// On-screen aspect ratio for
+    (g_canvasID.height);	// this camera: width/height.
+
+  pushMatrix(g_modelMatrix);
+
+  g_modelMatrix.perspective(35,			// fovy: y-axis field-of-view in degrees
+    // (top <-> bottom in view frustum)
+    vpAspect, // aspect ratio: width/height
+    1, 20);	// near, far (always >0).
+
+  g_modelMatrix.lookAt(	0, 1.5, -4, 				// 'Center' or 'Eye Point',
+    0, 0, 0, 					// look-At point,
+    0, 0, 1);					// View UP vector, all in 'world' coords.
+  // For this viewport, set camera's eye point and the viewing volume:
+  gl.viewport(0, 0, g_canvasID.width / 2, g_canvasID.height);
+  drawObjects();
+  g_modelMatrix = popMatrix();
+
+  var width = Math.tan(35/360.0*Math.PI)*(20-1)/3
+  var height = width / vpAspect
+  g_modelMatrix.ortho(-width,width, -height, height, 1, 20)
+  g_modelMatrix.lookAt(	0, 1.5, -4, 				// 'Center' or 'Eye Point',
+    0, 0, 0, 					// look-At point,
+    0, 0, 1);					// View UP vector, all in 'world' coords.
+  gl.viewport(g_canvasID.width / 2, 0, g_canvasID.width / 2, g_canvasID.height);
+  drawObjects();
+}
+
+function drawObjects() {
 
   pushMatrix(g_modelMatrix);
   g_modelMatrix.translate(Math.sin(g_angle_plane_now / 180.0 * Math.PI) * 0.5, 0.5, Math.cos(g_angle_plane_now / 180.0 * Math.PI) * 0.5);
@@ -236,11 +271,15 @@ function drawAll() {
   g_modelMatrix = popMatrix();
 
   pushMatrix(g_modelMatrix);
-  g_modelMatrix.translate(0, -0.5, 0);
+  var dist = Math.sqrt(g_xMdragTot * g_xMdragTot + g_yMdragTot * g_yMdragTot);
+  g_modelMatrix.rotate(dist * 50.0, -g_yMdragTot + 0.0001, g_xMdragTot + 0.0001, 0.0);
   drawRadar()
   g_modelMatrix = popMatrix();
+  pushMatrix(g_modelMatrix);
+  g_modelMatrix.rotate(90, 1, 0, 0)
+  drawGrid()
+  g_modelMatrix = popMatrix();
 }
-
 
 function drawPlane() {
   g_modelMatrix.rotate(-30, 1, 0, 0)
@@ -296,6 +335,11 @@ function drawFrame() {
 function drawPanel() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
   gl.drawArrays(gl.TRIANGLE_STRIP, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount, g_panel_vertCount);
+}
+
+function drawGrid() {
+  gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
+  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount + g_panel_vertCount, g_ground_vertCount);
 }
 
 function panel_runStop() {
@@ -398,4 +442,68 @@ function myKeyDown(kev) {
     default:
       break;
   }
+}
+
+function resizeCanvas() {
+  g_canvasID.width = innerWidth;
+  g_canvasID.height = innerHeight/2;
+  drawAll();
+}
+
+function makeGroundGrid() {
+//==============================================================================
+// Create a list of vertices that create a large grid of lines in the x,y plane
+// centered at x=y=z=0.  Draw this shape using the GL_LINES primitive.
+
+  var xcount = 100;			// # of lines to draw in x,y to make the grid.
+  var ycount = 100;
+  var xymax	= 20.0;			// grid size; extends to cover +/-xymax in x and y.
+  var xColr = new Float32Array([1.0, 1.0, 0.3]);	// bright yellow
+  var yColr = new Float32Array([0.5, 1.0, 0.5]);	// bright green.
+
+  // Create an (global) array to hold this ground-plane's vertices:
+  let gndVerts = new Float32Array(7 * 2 * (xcount + ycount));
+  // draw a grid made of xcount+ycount lines; 2 vertices per line.
+
+  var xgap = xymax/(xcount-1);		// HALF-spacing between lines in x,y;
+  var ygap = xymax/(ycount-1);		// (why half? because v==(0line number/2))
+
+  // First, step thru x values as we make vertical lines of constant-x:
+  for(v=0, j=0; v<2*xcount; v++, j+= 7) {
+    if(v%2==0) {	// put even-numbered vertices at (xnow, -xymax, 0)
+      gndVerts[j  ] = -xymax + (v  )*xgap;	// x
+      gndVerts[j+1] = -xymax;								// y
+      gndVerts[j+2] = 0.0;									// z
+      gndVerts[j+3] = 1.0;									// w.
+    }
+    else {				// put odd-numbered vertices at (xnow, +xymax, 0).
+      gndVerts[j  ] = -xymax + (v-1)*xgap;	// x
+      gndVerts[j+1] = xymax;								// y
+      gndVerts[j+2] = 0.0;									// z
+      gndVerts[j+3] = 1.0;									// w.
+    }
+    gndVerts[j+4] = xColr[0];			// red
+    gndVerts[j+5] = xColr[1];			// grn
+    gndVerts[j+6] = xColr[2];			// blu
+  }
+  // Second, step thru y values as wqe make horizontal lines of constant-y:
+  // (don't re-initialize j--we're adding more vertices to the array)
+  for(v=0; v<2*ycount; v++, j+= 7) {
+    if(v%2==0) {		// put even-numbered vertices at (-xymax, ynow, 0)
+      gndVerts[j  ] = -xymax;								// x
+      gndVerts[j+1] = -xymax + (v  )*ygap;	// y
+      gndVerts[j+2] = 0.0;									// z
+      gndVerts[j+3] = 1.0;									// w.
+    }
+    else {					// put odd-numbered vertices at (+xymax, ynow, 0).
+      gndVerts[j  ] = xymax;								// x
+      gndVerts[j+1] = -xymax + (v-1)*ygap;	// y
+      gndVerts[j+2] = 0.0;									// z
+      gndVerts[j+3] = 1.0;									// w.
+    }
+    gndVerts[j+4] = yColr[0];			// red
+    gndVerts[j+5] = yColr[1];			// grn
+    gndVerts[j+6] = yColr[2];			// blu
+  }
+  return gndVerts
 }
