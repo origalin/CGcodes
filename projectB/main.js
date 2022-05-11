@@ -28,6 +28,7 @@ var g_base_vertCount;
 var g_frame_vertCount;
 var g_panel_vertCount;
 var g_ground_vertCount;
+var g_cord_vertCount;
 var g_modelMatrix;
 var uLoc_modelMatrix;
 var g_lastMS = Date.now();
@@ -58,6 +59,18 @@ var g_yMclik = 0.0;
 var g_xMdragTot = 0.0;
 var g_yMdragTot = 0.0;
 
+var g_near = 1
+var g_far = 20
+var g_camera_pos = [0, 1.5, -4]
+var g_camera_look = [0, 0, 0]
+var g_fov = 35
+var g_view_angel = 0
+var r = Math.sqrt(Math.pow(g_camera_look[0] - g_camera_pos[0], 2) + Math.pow(g_camera_look[2] - g_camera_pos[2], 2))
+
+var qNew = new Quaternion(0, 0, 0, 1); // most-recent mouse drag's rotation
+var qTot = new Quaternion(0, 0, 0, 1);	// 'current' orientation (made from qNew)
+var quatMatrix = new Matrix4();				// rotation matrix, made from latest qTot
+
 function main() {
   window.addEventListener("mousedown", myMouseDown);
   window.addEventListener("mousemove", myMouseMove);
@@ -86,7 +99,7 @@ function main() {
     return;
   }
 
-  gl.clearColor(0/255,0/255,0/255, 1);
+  gl.clearColor(0 / 255, 0 / 255, 0 / 255, 1);
   gl.enable(gl.DEPTH_TEST);
   // gl.clearDepth(0.0);
   // gl.depthFunc(gl.GREATER);
@@ -157,27 +170,36 @@ function initVertexBuffers() {
   var ground_vert = Array.from(makeGroundGrid());
 
   let h5 = 0.5 / 2 * Math.sqrt(3)
-  let r5 = 134/255
-  let g5 = 138/255
-  let b5 = 138/255
-  var dot51 = [-0.25, h5, -0.1, 1.0,r5,g5,b5]
-  var dot52 = [0.25, h5, -0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
-  var dot53 = [0.5, 0, -0.1, 1.0,r5,g5,b5]
-  var dot54 = [0.25, -h5, -0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
-  var dot55 = [-0.25, -h5, -0.1, 1.0,r5,g5,b5]
-  var dot56 = [-0.5, 0, -0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
-  var dot57 = [-0.25, h5, 0.1, 1.0,r5,g5,b5]
-  var dot58 = [0.25, h5, 0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
-  var dot59 = [0.5, 0, 0.1, 1.0,r5,g5,b5]
-  var dot510 = [0.25, -h5, 0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
-  var dot511 = [-0.25, -h5, 0.1, 1.0,r5,g5,b5]
-  var dot512 = [-0.5, 0, 0.1, 1.0,r5*1.3,g5*1.3,b5*1.3]
+  let r5 = 134 / 255
+  let g5 = 138 / 255
+  let b5 = 138 / 255
+  var dot51 = [-0.25, h5, -0.1, 1.0, r5, g5, b5]
+  var dot52 = [0.25, h5, -0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
+  var dot53 = [0.5, 0, -0.1, 1.0, r5, g5, b5]
+  var dot54 = [0.25, -h5, -0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
+  var dot55 = [-0.25, -h5, -0.1, 1.0, r5, g5, b5]
+  var dot56 = [-0.5, 0, -0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
+  var dot57 = [-0.25, h5, 0.1, 1.0, r5, g5, b5]
+  var dot58 = [0.25, h5, 0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
+  var dot59 = [0.5, 0, 0.1, 1.0, r5, g5, b5]
+  var dot510 = [0.25, -h5, 0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
+  var dot511 = [-0.25, -h5, 0.1, 1.0, r5, g5, b5]
+  var dot512 = [-0.5, 0, 0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
 
   var panel_vert = [
-    dot51,dot57,dot52,dot58,dot53,dot59,dot54,dot510,dot55,dot511,dot56,dot512,dot51,dot57,dot512,dot58,dot511,dot59,dot510,dot54,dot53,dot55,dot52,dot56,dot51
+    dot51, dot57, dot52, dot58, dot53, dot59, dot54, dot510, dot55, dot511, dot56, dot512, dot51, dot57, dot512, dot58, dot511, dot59, dot510, dot54, dot53, dot55, dot52, dot56, dot51
   ].flat()
 
-  var vertices = new Float32Array([body_vert, paddle_vert, base_vert, frame_vert, panel_vert, ground_vert].flat());
+  var cord_vert = [
+    0, 0, 0, 1, 1, 0, 0,
+    1, 0, 0, 1, 1, 0, 0,
+    0, 0, 0, 1, 0, 1, 0,
+    0, 1, 0, 1, 0, 1, 0,
+    0, 0, 0, 1, 0, 0, 1,
+    0, 0, 1, 1, 0, 0, 1,
+  ]
+
+  var vertices = new Float32Array([body_vert, paddle_vert, base_vert, frame_vert, panel_vert, ground_vert, cord_vert].flat());
   g_vertCount = vertices.length / 7;
   g_body_vertCount = body_vert.length / 7;
   g_paddle_vertCount = paddle_vert.length / 7;
@@ -185,7 +207,7 @@ function initVertexBuffers() {
   g_frame_vertCount = frame_vert.length / 7
   g_panel_vertCount = panel_vert.length / 7
   g_ground_vertCount = ground_vert.length / 7
-  console.log(g_ground_vertCount)
+  g_cord_vertCount = cord_vert.length / 7
 
   var vertexBufferID = gl.createBuffer();
   if (!vertexBufferID) {
@@ -205,7 +227,7 @@ function initVertexBuffers() {
   gl.vertexAttribPointer(aLoc_Position, 4, gl.FLOAT, false, FSIZE * 7, 0);
   gl.enableVertexAttribArray(aLoc_Position);
   var a_Color = gl.getAttribLocation(gl.program, 'a_Color');
-  if(a_Color < 0) {
+  if (a_Color < 0) {
     console.log('Failed to get the storage location of a_Color');
     return -1;
   }
@@ -229,11 +251,11 @@ function drawAll() {
   g_modelMatrix.setIdentity();
   //----------------------Create, fill UPPER viewport------------------------
   gl.viewport(0,											// Viewport lower-left corner
-    g_canvasID.height/2, 			// location(in pixels)
+    g_canvasID.height / 2, 			// location(in pixels)
     g_canvasID.width, 				// viewport width,
-    g_canvasID.height/2);			// viewport height in pixels.
+    g_canvasID.height / 2);			// viewport height in pixels.
 
-  var vpAspect = g_canvasID.width/2/			// On-screen aspect ratio for
+  var vpAspect = g_canvasID.width / 2 /			// On-screen aspect ratio for
     (g_canvasID.height);	// this camera: width/height.
 
   pushMatrix(g_modelMatrix);
@@ -243,20 +265,20 @@ function drawAll() {
     vpAspect, // aspect ratio: width/height
     1, 20);	// near, far (always >0).
 
-  g_modelMatrix.lookAt(	0, 1.5, -4, 				// 'Center' or 'Eye Point',
-    0, 0, 0, 					// look-At point,
-    0, 0, 1);					// View UP vector, all in 'world' coords.
+  g_modelMatrix.lookAt(g_camera_pos[0], g_camera_pos[1], g_camera_pos[2], 				// 'Center' or 'Eye Point',
+    g_camera_look[0], g_camera_look[1], g_camera_look[2], 					// look-At point,
+    0, 1, 0);					// View UP vector, all in 'world' coords.
   // For this viewport, set camera's eye point and the viewing volume:
   gl.viewport(0, 0, g_canvasID.width / 2, g_canvasID.height);
   drawObjects();
   g_modelMatrix = popMatrix();
 
-  var width = Math.tan(35/360.0*Math.PI)*(20-1)/3
+  var width = Math.tan(g_fov / 360.0 * Math.PI) * (g_far - g_near) / 3
   var height = width / vpAspect
-  g_modelMatrix.ortho(-width,width, -height, height, 1, 20)
-  g_modelMatrix.lookAt(	0, 1.5, -4, 				// 'Center' or 'Eye Point',
-    0, 0, 0, 					// look-At point,
-    0, 0, 1);					// View UP vector, all in 'world' coords.
+  g_modelMatrix.ortho(-width, width, -height, height, g_near, g_far)
+  g_modelMatrix.lookAt(g_camera_pos[0], g_camera_pos[1], g_camera_pos[2], 				// 'Center' or 'Eye Point',
+    g_camera_look[0], g_camera_look[1], g_camera_look[2], 					// look-At point,
+    0, 1, 0);					// View UP vector, all in 'world' coords.
   gl.viewport(g_canvasID.width / 2, 0, g_canvasID.width / 2, g_canvasID.height);
   drawObjects();
 }
@@ -271,8 +293,8 @@ function drawObjects() {
   g_modelMatrix = popMatrix();
 
   pushMatrix(g_modelMatrix);
-  var dist = Math.sqrt(g_xMdragTot * g_xMdragTot + g_yMdragTot * g_yMdragTot);
-  g_modelMatrix.rotate(dist * 50.0, -g_yMdragTot + 0.0001, g_xMdragTot + 0.0001, 0.0);
+  quatMatrix.setFromQuat(qTot.x, qTot.y, qTot.z, qTot.w);	// Quaternion-->Matrix
+  g_modelMatrix.concat(quatMatrix);	// apply that matrix.
   drawRadar()
   g_modelMatrix = popMatrix();
   pushMatrix(g_modelMatrix);
@@ -284,31 +306,39 @@ function drawObjects() {
 function drawPlane() {
   g_modelMatrix.rotate(-30, 1, 0, 0)
   g_modelMatrix.rotate(90, 0, 1, 0);
+  drawCord()
   drawBody();
   g_modelMatrix.translate(0, 0, 0.5);
   g_modelMatrix.scale(0.15, 0.15, 0.15)
   g_modelMatrix.rotate(90, 0, 1, 0);
   g_modelMatrix.rotate(g_angle_paddle_now, 1, 0, 0);
+  drawCord()
   drawPaddle()
   g_modelMatrix.rotate(90, 1, 0, 0);
+  drawCord()
   drawPaddle()
   g_modelMatrix.rotate(90, 1, 0, 0);
+  drawCord()
   drawPaddle()
   g_modelMatrix.rotate(90, 1, 0, 0);
+  drawCord()
   drawPaddle()
 }
 
 function drawRadar() {
   g_modelMatrix.scale(0.2, 0.2, 0.2)
   g_modelMatrix.rotate(-90, 1, 0, 0)
+  drawCord()
   drawBase()
   g_modelMatrix.translate(0, 0, 1);
   g_modelMatrix.rotate(g_angle_frame_now, 0, 0, 1)
+  drawCord()
   drawFrame()
   g_modelMatrix.translate(0, 0, 0.5);
   g_modelMatrix.rotate(g_angle_panel_now, 1, 0, 0)
   g_modelMatrix.rotate(g_angle_panel_aspect - 90, 1, 0, 0)
   // g_modelMatrix.scale(0.5, 0.5, 0.5);
+  drawCord()
   drawPanel()
 }
 
@@ -340,6 +370,11 @@ function drawPanel() {
 function drawGrid() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
   gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount + g_panel_vertCount, g_ground_vertCount);
+}
+
+function drawCord() {
+  gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
+  gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount + g_panel_vertCount + g_ground_vertCount, g_cord_vertCount);
 }
 
 function panel_runStop() {
@@ -403,6 +438,7 @@ function myMouseMove(ev) {
     (g_canvasID.height / 2);
   g_xMdragTot += (x - g_xMclik);
   g_yMdragTot += (y - g_yMclik);
+  dragQuat(x - g_xMclik, g_yMclik - y);
   g_xMclik = x;
   g_yMclik = y;
 }
@@ -419,25 +455,120 @@ function myMouseUp(ev) {
   g_isDrag = false;
   if (g_isSlide) {
     g_isSlide = false;
-  } else{
+  } else {
     g_xMdragTot += (x - g_xMclik);
     g_yMdragTot += (y - g_yMclik);
   }
+  dragQuat(x - g_xMclik, g_yMclik - y);
 }
+
+function dragQuat(xdrag, ydrag) {
+//==============================================================================
+// Called when user drags mouse by 'xdrag,ydrag' as measured in CVV coords.
+// We find a rotation axis perpendicular to the drag direction, and convert the
+// drag distance to an angular rotation amount, and use both to set the value of
+// the quaternion qNew.  We then combine this new rotation with the current
+// rotation stored in quaternion 'qTot' by quaternion multiply.  Note the
+// 'draw()' function converts this current 'qTot' quaternion to a rotation
+// matrix for drawing.
+  var res = 5;
+  var qTmp = new Quaternion(0, 0, 0, 1);
+
+  var dist = Math.sqrt(xdrag * xdrag + ydrag * ydrag);
+  // console.log('xdrag,ydrag=',xdrag.toFixed(5),ydrag.toFixed(5),'dist=',dist.toFixed(5));
+  qNew.setFromAxisAngle(-ydrag + 0.0001, xdrag + 0.0001, 0.0, dist * 150.0);
+  // (why add tiny 0.0001? To ensure we never have a zero-length rotation axis)
+  // why axis (x,y,z) = (-yMdrag,+xMdrag,0)?
+  // -- to rotate around +x axis, drag mouse in -y direction.
+  // -- to rotate around +y axis, drag mouse in +x direction.
+
+  qTmp.multiply(qNew, qTot);			// apply new rotation to current rotation.
+  //--------------------------
+  // IMPORTANT! Why qNew*qTot instead of qTot*qNew? (Try it!)
+  // ANSWER: Because 'duality' governs ALL transformations, not just matrices.
+  // If we multiplied in (qTot*qNew) order, we would rotate the drawing axes
+  // first by qTot, and then by qNew--we would apply mouse-dragging rotations
+  // to already-rotated drawing axes.  Instead, we wish to apply the mouse-drag
+  // rotations FIRST, before we apply rotations from all the previous dragging.
+  //------------------------
+  // IMPORTANT!  Both qTot and qNew are unit-length quaternions, but we store
+  // them with finite precision. While the product of two (EXACTLY) unit-length
+  // quaternions will always be another unit-length quaternion, the qTmp length
+  // may drift away from 1.0 if we repeat this quaternion multiply many times.
+  // A non-unit-length quaternion won't work with our quaternion-to-matrix fcn.
+  // Matrix4.prototype.setFromQuat().
+//	qTmp.normalize();						// normalize to ensure we stay at length==1.0.
+  qTot.copy(qTmp);
+
+};
 
 function myKeyDown(kev) {
   switch (kev.code) {
-    case "ArrowUp":
+    case "KeyZ":
       g_angle_plane_rate += 10
       document.getElementById('Speed').innerHTML = "Speed: " + g_angle_plane_rate
       break;
-    case "ArrowDown":
+    case "KeyX":
       if (g_angle_plane_rate - 10 > 0) {
         g_angle_plane_rate -= 10
         document.getElementById('Speed').innerHTML = "Speed: " + g_angle_plane_rate
       } else {
         document.getElementById('Speed').innerHTML = "Speed: too low"
       }
+      break
+    case "ArrowLeft":
+      var last_x = r * Math.sin(g_view_angel)
+      var last_y = r * (Math.cos(g_view_angel) - 1)
+      g_view_angel += Math.PI/60
+      g_camera_look[0] += r * Math.sin(g_view_angel) - last_x
+      g_camera_look[2] += r * (Math.cos(g_view_angel) - 1) - last_y
+      console.log(r + " " + g_camera_look[0] + " " + g_camera_look[2])
+      break;
+    case "ArrowRight":
+      var last_x = r * Math.sin(g_view_angel)
+      var last_y = r * (Math.cos(g_view_angel) - 1)
+      g_view_angel -= Math.PI/60
+      g_camera_look[0] += r * Math.sin(g_view_angel) - last_x
+      g_camera_look[2] += r * (Math.cos(g_view_angel) - 1) - last_y
+      console.log(r + " " + g_camera_look[0] + " " + g_camera_look[2])
+      break;
+    case "ArrowUp":
+      g_camera_look[1] += 0.1
+      break;
+    case "ArrowDown":
+      g_camera_look[1] -= 0.1
+      break;
+    case "KeyW":
+      var vec = [g_camera_pos[0] - g_camera_look[0], g_camera_pos[1] - g_camera_look[1], g_camera_pos[2] - g_camera_look[2]]
+      g_camera_look[0] -= 0.1 * vec[0]
+      g_camera_look[1] -= 0.1 * vec[1]
+      g_camera_look[2] -= 0.1 * vec[2]
+
+      g_camera_pos[0] -= 0.1 * vec[0]
+      g_camera_pos[1] -= 0.1 * vec[1]
+      g_camera_pos[2] -= 0.1 * vec[2]
+      break;
+    case "KeyA":
+      g_camera_look[0] += 0.1 * Math.cos(g_view_angel)
+      g_camera_pos[0] += 0.1 * Math.cos(g_view_angel)
+      g_camera_look[2] -= 0.1 * Math.sin(g_view_angel)
+      g_camera_pos[2] -= 0.1 * Math.sin(g_view_angel)
+      break;
+    case "KeyS":
+      var vec = [g_camera_pos[0] - g_camera_look[0], g_camera_pos[1] - g_camera_look[1], g_camera_pos[2] - g_camera_look[2]]
+      g_camera_look[0] += 0.1 * vec[0]
+      g_camera_look[1] += 0.1 * vec[1]
+      g_camera_look[2] += 0.1 * vec[2]
+
+      g_camera_pos[0] += 0.1 * vec[0]
+      g_camera_pos[1] += 0.1 * vec[1]
+      g_camera_pos[2] += 0.1 * vec[2]
+      break;
+    case "KeyD":
+      g_camera_look[0] -= 0.1 * Math.cos(g_view_angel)
+      g_camera_pos[0] -= 0.1 * Math.cos(g_view_angel)
+      g_camera_look[2] += 0.1 * Math.sin(g_view_angel)
+      g_camera_pos[2] += 0.1 * Math.sin(g_view_angel)
       break;
     default:
       break;
@@ -446,7 +577,7 @@ function myKeyDown(kev) {
 
 function resizeCanvas() {
   g_canvasID.width = innerWidth;
-  g_canvasID.height = innerHeight/2;
+  g_canvasID.height = innerHeight / 2;
   drawAll();
 }
 
@@ -457,7 +588,7 @@ function makeGroundGrid() {
 
   var xcount = 100;			// # of lines to draw in x,y to make the grid.
   var ycount = 100;
-  var xymax	= 20.0;			// grid size; extends to cover +/-xymax in x and y.
+  var xymax = 20.0;			// grid size; extends to cover +/-xymax in x and y.
   var xColr = new Float32Array([1.0, 1.0, 0.3]);	// bright yellow
   var yColr = new Float32Array([0.5, 1.0, 0.5]);	// bright green.
 
@@ -465,45 +596,43 @@ function makeGroundGrid() {
   let gndVerts = new Float32Array(7 * 2 * (xcount + ycount));
   // draw a grid made of xcount+ycount lines; 2 vertices per line.
 
-  var xgap = xymax/(xcount-1);		// HALF-spacing between lines in x,y;
-  var ygap = xymax/(ycount-1);		// (why half? because v==(0line number/2))
+  var xgap = xymax / (xcount - 1);		// HALF-spacing between lines in x,y;
+  var ygap = xymax / (ycount - 1);		// (why half? because v==(0line number/2))
 
   // First, step thru x values as we make vertical lines of constant-x:
-  for(v=0, j=0; v<2*xcount; v++, j+= 7) {
-    if(v%2==0) {	// put even-numbered vertices at (xnow, -xymax, 0)
-      gndVerts[j  ] = -xymax + (v  )*xgap;	// x
-      gndVerts[j+1] = -xymax;								// y
-      gndVerts[j+2] = 0.0;									// z
-      gndVerts[j+3] = 1.0;									// w.
+  for (v = 0, j = 0; v < 2 * xcount; v++, j += 7) {
+    if (v % 2 == 0) {	// put even-numbered vertices at (xnow, -xymax, 0)
+      gndVerts[j] = -xymax + (v) * xgap;	// x
+      gndVerts[j + 1] = -xymax;								// y
+      gndVerts[j + 2] = 0.0;									// z
+      gndVerts[j + 3] = 1.0;									// w.
+    } else {				// put odd-numbered vertices at (xnow, +xymax, 0).
+      gndVerts[j] = -xymax + (v - 1) * xgap;	// x
+      gndVerts[j + 1] = xymax;								// y
+      gndVerts[j + 2] = 0.0;									// z
+      gndVerts[j + 3] = 1.0;									// w.
     }
-    else {				// put odd-numbered vertices at (xnow, +xymax, 0).
-      gndVerts[j  ] = -xymax + (v-1)*xgap;	// x
-      gndVerts[j+1] = xymax;								// y
-      gndVerts[j+2] = 0.0;									// z
-      gndVerts[j+3] = 1.0;									// w.
-    }
-    gndVerts[j+4] = xColr[0];			// red
-    gndVerts[j+5] = xColr[1];			// grn
-    gndVerts[j+6] = xColr[2];			// blu
+    gndVerts[j + 4] = xColr[0];			// red
+    gndVerts[j + 5] = xColr[1];			// grn
+    gndVerts[j + 6] = xColr[2];			// blu
   }
   // Second, step thru y values as wqe make horizontal lines of constant-y:
   // (don't re-initialize j--we're adding more vertices to the array)
-  for(v=0; v<2*ycount; v++, j+= 7) {
-    if(v%2==0) {		// put even-numbered vertices at (-xymax, ynow, 0)
-      gndVerts[j  ] = -xymax;								// x
-      gndVerts[j+1] = -xymax + (v  )*ygap;	// y
-      gndVerts[j+2] = 0.0;									// z
-      gndVerts[j+3] = 1.0;									// w.
+  for (v = 0; v < 2 * ycount; v++, j += 7) {
+    if (v % 2 == 0) {		// put even-numbered vertices at (-xymax, ynow, 0)
+      gndVerts[j] = -xymax;								// x
+      gndVerts[j + 1] = -xymax + (v) * ygap;	// y
+      gndVerts[j + 2] = 0.0;									// z
+      gndVerts[j + 3] = 1.0;									// w.
+    } else {					// put odd-numbered vertices at (+xymax, ynow, 0).
+      gndVerts[j] = xymax;								// x
+      gndVerts[j + 1] = -xymax + (v - 1) * ygap;	// y
+      gndVerts[j + 2] = 0.0;									// z
+      gndVerts[j + 3] = 1.0;									// w.
     }
-    else {					// put odd-numbered vertices at (+xymax, ynow, 0).
-      gndVerts[j  ] = xymax;								// x
-      gndVerts[j+1] = -xymax + (v-1)*ygap;	// y
-      gndVerts[j+2] = 0.0;									// z
-      gndVerts[j+3] = 1.0;									// w.
-    }
-    gndVerts[j+4] = yColr[0];			// red
-    gndVerts[j+5] = yColr[1];			// grn
-    gndVerts[j+6] = yColr[2];			// blu
+    gndVerts[j + 4] = yColr[0];			// red
+    gndVerts[j + 5] = yColr[1];			// grn
+    gndVerts[j + 6] = yColr[2];			// blu
   }
   return gndVerts
 }
