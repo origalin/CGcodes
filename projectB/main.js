@@ -29,6 +29,8 @@ var g_frame_vertCount;
 var g_panel_vertCount;
 var g_ground_vertCount;
 var g_cord_vertCount;
+var g_sphere_vertCount;
+var g_cylinder_vertCount;
 var g_modelMatrix;
 var uLoc_modelMatrix;
 var g_lastMS = Date.now();
@@ -51,6 +53,8 @@ var g_angle_panel_range = 60
 var g_angle_panel_min = -g_angle_panel_range / 2;
 var g_angle_panel_max = g_angle_panel_range / 2;
 
+var g_pos_sphere_now = 0
+
 var g_isSlide = false
 
 var g_isDrag = false;
@@ -61,8 +65,8 @@ var g_yMdragTot = 0.0;
 
 var g_near = 1
 var g_far = 20
-var g_camera_pos = [0, 1.5, -4]
-var g_camera_look = [0, 0, 0]
+var g_camera_pos = [0, 1.5, -5]
+var g_camera_look = [0, 1, 0]
 var g_fov = 35
 var g_view_angel = 0
 var r = Math.sqrt(Math.pow(g_camera_look[0] - g_camera_pos[0], 2) + Math.pow(g_camera_look[2] - g_camera_pos[2], 2))
@@ -160,6 +164,11 @@ function timerAll() {
   if (g_angle_paddle_now < -360) {
     g_angle_paddle_now += 360
   }
+
+  g_pos_sphere_now += 0.05
+  if (g_pos_sphere_now > 2 * Math.PI) {
+    g_pos_sphere_now = 0
+  }
 }
 
 function initVertexBuffers() {
@@ -167,39 +176,13 @@ function initVertexBuffers() {
   var paddle_vert = generatePaddleVert();
   var base_vert = generateBaseVert();
   var frame_vert = generateFrameVert();
-  var ground_vert = Array.from(makeGroundGrid());
+  var ground_vert = makeGroundGrid();
+  var panel_vert = generatePanelVert()
+  var cord_vert = generateCordVert()
+  var cyli_vert = makeCylinder()
+  var sphe_vert = makeSphere()
 
-  let h5 = 0.5 / 2 * Math.sqrt(3)
-  let r5 = 134 / 255
-  let g5 = 138 / 255
-  let b5 = 138 / 255
-  var dot51 = [-0.25, h5, -0.1, 1.0, r5, g5, b5]
-  var dot52 = [0.25, h5, -0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
-  var dot53 = [0.5, 0, -0.1, 1.0, r5, g5, b5]
-  var dot54 = [0.25, -h5, -0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
-  var dot55 = [-0.25, -h5, -0.1, 1.0, r5, g5, b5]
-  var dot56 = [-0.5, 0, -0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
-  var dot57 = [-0.25, h5, 0.1, 1.0, r5, g5, b5]
-  var dot58 = [0.25, h5, 0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
-  var dot59 = [0.5, 0, 0.1, 1.0, r5, g5, b5]
-  var dot510 = [0.25, -h5, 0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
-  var dot511 = [-0.25, -h5, 0.1, 1.0, r5, g5, b5]
-  var dot512 = [-0.5, 0, 0.1, 1.0, r5 * 1.3, g5 * 1.3, b5 * 1.3]
-
-  var panel_vert = [
-    dot51, dot57, dot52, dot58, dot53, dot59, dot54, dot510, dot55, dot511, dot56, dot512, dot51, dot57, dot512, dot58, dot511, dot59, dot510, dot54, dot53, dot55, dot52, dot56, dot51
-  ].flat()
-
-  var cord_vert = [
-    0, 0, 0, 1, 1, 0, 0,
-    1, 0, 0, 1, 1, 0, 0,
-    0, 0, 0, 1, 0, 1, 0,
-    0, 1, 0, 1, 0, 1, 0,
-    0, 0, 0, 1, 0, 0, 1,
-    0, 0, 1, 1, 0, 0, 1,
-  ]
-
-  var vertices = new Float32Array([body_vert, paddle_vert, base_vert, frame_vert, panel_vert, ground_vert, cord_vert].flat());
+  var vertices = new Float32Array([body_vert, paddle_vert, base_vert, frame_vert, panel_vert, ground_vert, cord_vert,  sphe_vert, cyli_vert].flat());
   g_vertCount = vertices.length / 7;
   g_body_vertCount = body_vert.length / 7;
   g_paddle_vertCount = paddle_vert.length / 7;
@@ -208,6 +191,9 @@ function initVertexBuffers() {
   g_panel_vertCount = panel_vert.length / 7
   g_ground_vertCount = ground_vert.length / 7
   g_cord_vertCount = cord_vert.length / 7
+  g_cylinder_vertCount = cyli_vert.length / 7
+  g_sphere_vertCount = sphe_vert.length / 7
+  console.log(g_cylinder_vertCount)
 
   var vertexBufferID = gl.createBuffer();
   if (!vertexBufferID) {
@@ -301,6 +287,19 @@ function drawObjects() {
   g_modelMatrix.rotate(90, 1, 0, 0)
   drawGrid()
   g_modelMatrix = popMatrix();
+  pushMatrix(g_modelMatrix);
+  g_modelMatrix.scale(0.2, 0.2, 0.2);
+  g_modelMatrix.translate(2,7,-2)
+  g_modelMatrix.translate(0,0.3 * Math.sin(g_pos_sphere_now),0)
+  g_modelMatrix.rotate(-90, 1, 0, 0)
+  drawSphere()
+  g_modelMatrix = popMatrix();
+  pushMatrix(g_modelMatrix);
+  g_modelMatrix.scale(0.3, 0.3, 0.3);
+  g_modelMatrix.translate(-4,1,0)
+  g_modelMatrix.rotate(-90, 1, 0, 0)
+  drawCylinder()
+  g_modelMatrix = popMatrix();
 }
 
 function drawPlane() {
@@ -340,6 +339,12 @@ function drawRadar() {
   // g_modelMatrix.scale(0.5, 0.5, 0.5);
   drawCord()
   drawPanel()
+  g_modelMatrix.scale(0.5, 0.5, 0.5)
+  g_modelMatrix.rotate(90, 1, 0, 0)
+  g_modelMatrix.translate(0, 0.5, 0);
+  g_modelMatrix.rotate(g_angle_paddle_now, 0, 1, 0)
+  drawCord()
+  drawPanel()
 }
 
 function drawBody() {
@@ -375,6 +380,16 @@ function drawGrid() {
 function drawCord() {
   gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
   gl.drawArrays(gl.LINES, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount + g_panel_vertCount + g_ground_vertCount, g_cord_vertCount);
+}
+
+function drawSphere() {
+  gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
+  gl.drawArrays(gl.TRIANGLE_STRIP, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount + g_panel_vertCount + g_ground_vertCount + g_cord_vertCount, g_sphere_vertCount);
+}
+
+function drawCylinder() {
+  gl.uniformMatrix4fv(uLoc_modelMatrix, false, g_modelMatrix.elements);
+  gl.drawArrays(gl.TRIANGLE_STRIP, g_body_vertCount + g_paddle_vertCount + g_base_vertCount + g_frame_vertCount + g_panel_vertCount + g_ground_vertCount + g_cord_vertCount + g_sphere_vertCount, g_cylinder_vertCount);
 }
 
 function panel_runStop() {
@@ -476,7 +491,7 @@ function dragQuat(xdrag, ydrag) {
 
   var dist = Math.sqrt(xdrag * xdrag + ydrag * ydrag);
   // console.log('xdrag,ydrag=',xdrag.toFixed(5),ydrag.toFixed(5),'dist=',dist.toFixed(5));
-  qNew.setFromAxisAngle(-ydrag + 0.0001, xdrag + 0.0001, 0.0, dist * 150.0);
+  qNew.setFromAxisAngle(Math.cos(g_view_angel) * (-ydrag) + 0.0001, xdrag + 0.0001, Math.sin(g_view_angel) * (ydrag), dist * 150.0);
   // (why add tiny 0.0001? To ensure we never have a zero-length rotation axis)
   // why axis (x,y,z) = (-yMdrag,+xMdrag,0)?
   // -- to rotate around +x axis, drag mouse in -y direction.
@@ -504,11 +519,11 @@ function dragQuat(xdrag, ydrag) {
 
 function myKeyDown(kev) {
   switch (kev.code) {
-    case "KeyZ":
+    case "KeyX":
       g_angle_plane_rate += 10
       document.getElementById('Speed').innerHTML = "Speed: " + g_angle_plane_rate
       break;
-    case "KeyX":
+    case "KeyZ":
       if (g_angle_plane_rate - 10 > 0) {
         g_angle_plane_rate -= 10
         document.getElementById('Speed').innerHTML = "Speed: " + g_angle_plane_rate
@@ -579,60 +594,4 @@ function resizeCanvas() {
   g_canvasID.width = innerWidth;
   g_canvasID.height = innerHeight / 2;
   drawAll();
-}
-
-function makeGroundGrid() {
-//==============================================================================
-// Create a list of vertices that create a large grid of lines in the x,y plane
-// centered at x=y=z=0.  Draw this shape using the GL_LINES primitive.
-
-  var xcount = 100;			// # of lines to draw in x,y to make the grid.
-  var ycount = 100;
-  var xymax = 20.0;			// grid size; extends to cover +/-xymax in x and y.
-  var xColr = new Float32Array([1.0, 1.0, 0.3]);	// bright yellow
-  var yColr = new Float32Array([0.5, 1.0, 0.5]);	// bright green.
-
-  // Create an (global) array to hold this ground-plane's vertices:
-  let gndVerts = new Float32Array(7 * 2 * (xcount + ycount));
-  // draw a grid made of xcount+ycount lines; 2 vertices per line.
-
-  var xgap = xymax / (xcount - 1);		// HALF-spacing between lines in x,y;
-  var ygap = xymax / (ycount - 1);		// (why half? because v==(0line number/2))
-
-  // First, step thru x values as we make vertical lines of constant-x:
-  for (v = 0, j = 0; v < 2 * xcount; v++, j += 7) {
-    if (v % 2 == 0) {	// put even-numbered vertices at (xnow, -xymax, 0)
-      gndVerts[j] = -xymax + (v) * xgap;	// x
-      gndVerts[j + 1] = -xymax;								// y
-      gndVerts[j + 2] = 0.0;									// z
-      gndVerts[j + 3] = 1.0;									// w.
-    } else {				// put odd-numbered vertices at (xnow, +xymax, 0).
-      gndVerts[j] = -xymax + (v - 1) * xgap;	// x
-      gndVerts[j + 1] = xymax;								// y
-      gndVerts[j + 2] = 0.0;									// z
-      gndVerts[j + 3] = 1.0;									// w.
-    }
-    gndVerts[j + 4] = xColr[0];			// red
-    gndVerts[j + 5] = xColr[1];			// grn
-    gndVerts[j + 6] = xColr[2];			// blu
-  }
-  // Second, step thru y values as wqe make horizontal lines of constant-y:
-  // (don't re-initialize j--we're adding more vertices to the array)
-  for (v = 0; v < 2 * ycount; v++, j += 7) {
-    if (v % 2 == 0) {		// put even-numbered vertices at (-xymax, ynow, 0)
-      gndVerts[j] = -xymax;								// x
-      gndVerts[j + 1] = -xymax + (v) * ygap;	// y
-      gndVerts[j + 2] = 0.0;									// z
-      gndVerts[j + 3] = 1.0;									// w.
-    } else {					// put odd-numbered vertices at (+xymax, ynow, 0).
-      gndVerts[j] = xymax;								// x
-      gndVerts[j + 1] = -xymax + (v - 1) * ygap;	// y
-      gndVerts[j + 2] = 0.0;									// z
-      gndVerts[j + 3] = 1.0;									// w.
-    }
-    gndVerts[j + 4] = yColr[0];			// red
-    gndVerts[j + 5] = yColr[1];			// grn
-    gndVerts[j + 6] = yColr[2];			// blu
-  }
-  return gndVerts
 }
