@@ -47,7 +47,9 @@ var floatsPerVertex = 7;	// # of Float32Array elements used for each vertex
 													// (x,y,z,w)position + (r,g,b)color
 													// Later, see if you can add:
 													// (x,y,z) surface normal + (tx,ty) texture addr.
-
+var g_C;
+var g_Cval = 0.0;
+var g_cStep = 0.01;
 function main() {
 //==============================================================================
   // Retrieve <canvas> element
@@ -102,13 +104,12 @@ function main() {
     console.log('Failed to get the storage location of u_ModelMatrix');
     return;
   }
-	var u_C = gl.getUniformLocation(gl.program, 'C');
-	if (!u_C) {
-		console.log('Failed to get the storage location of u_C');
+	g_C = gl.getUniformLocation(gl.program, 'C');
+	if (!g_C) {
+		console.log('Failed to get the storage location of g_C');
 		return;
 	}
-	gl.uniform1fv(u_C, [7.0]);
-  // Create a local version of our model matrix in JavaScript 
+  // Create a local version of our model matrix in JavaScript
   var modelMatrix = new Matrix4();
   
   // Create, init current rotation angle value in JavaScript
@@ -118,7 +119,7 @@ function main() {
   // Start drawing: create 'tick' variable whose value is this function:
   var tick = function() {
     currentAngle = animate(currentAngle);  // Update the rotation angle
-    drawAll(gl, n, currentAngle, modelMatrix, u_ModelMatrix);   // Draw shapes
+		drawAll(gl, n, currentAngle, modelMatrix, u_ModelMatrix);   // Draw shapes
     // report current angle on console
     //console.log('currentAngle=',currentAngle);
     requestAnimationFrame(tick, canvas);   
@@ -602,6 +603,7 @@ function drawAll(gl, n, currentAngle, modelMatrix, u_ModelMatrix) {
 //==============================================================================
   // Clear <canvas>  colors AND the depth buffer
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	gl.uniform1fv(g_C, [g_Cval]);
   modelMatrix.setIdentity();    // DEFINE 'world-space' coords.
 
 /*
@@ -724,6 +726,10 @@ function animate(angle) {
 //  if(angle < -120.0 && ANGLE_STEP < 0) ANGLE_STEP = -ANGLE_STEP;
   
   var newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+	g_Cval += g_cStep
+	if (g_Cval >= 2 * Math.PI) {
+		g_Cval = 0
+	}
   return newAngle %= 360;
 }
 
@@ -739,6 +745,14 @@ function spinDown() {
 
 function spinUp() {
   ANGLE_STEP += 25; 
+}
+
+function shiveringDown() {
+	g_cStep -= 0.001;
+}
+
+function shiveringUp() {
+	g_cStep += 0.001;
 }
 
 function runStop() {
