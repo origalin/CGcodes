@@ -116,6 +116,15 @@ var g_show0 = 1;								// 0==Show, 1==Hide VBO0 contents on-screen.
 var g_show1 = 1;								// 	"					"			VBO1		"				"				" 
 var g_show2 = 1;                //  "         "     VBO2    "       "       "
 
+var g_modelMatrix;
+
+var g_near = 1
+var g_far = 20
+var g_camera_pos = [0, -5, 2]
+var g_camera_look = [0, 0, 0]
+var g_fov = 35
+var g_view_angel = 0
+
 function main() {
 //=============================================================================
   // Retrieve the HTML-5 <canvas> element where webGL will draw our pictures:
@@ -140,7 +149,7 @@ function main() {
     console.log('Failed to get the rendering context for WebGL');
     return;
   }
-  gl.clearColor(0.2, 0.2, 0.2, 1);	  // RGBA color for clearing <canvas>
+  gl.clearColor(0, 0, 0, 1);	  // RGBA color for clearing <canvas>
 
   gl.enable(gl.DEPTH_TEST);
 
@@ -155,21 +164,21 @@ function main() {
   //  b) reverse the usage of the depth-buffer's stored values, like this:
   gl.enable(gl.DEPTH_TEST); // enabled by default, but let's be SURE.
 
-  gl.clearDepth(0.0);       // each time we 'clear' our depth buffer, set all
-                            // pixel depths to 0.0  (1.0 is DEFAULT)
-  gl.depthFunc(gl.GREATER); // draw a pixel only if its depth value is GREATER
-                            // than the depth buffer's stored value.
-                            // (gl.LESS is DEFAULT; reverse it!)
+  // gl.clearDepth(0.0);       // each time we 'clear' our depth buffer, set all
+  //                           // pixel depths to 0.0  (1.0 is DEFAULT)
+  // gl.depthFunc(gl.GREATER); // draw a pixel only if its depth value is GREATER
+  //                           // than the depth buffer's stored value.
+  //                           // (gl.LESS is DEFAULT; reverse it!)
   //------------------end 'REVERSED DEPTH' fix---------------------------------
 
-
+  g_modelMatrix = new Matrix4();
   // Initialize each of our 'vboBox' objects: 
   worldBox.init(gl);		// VBO + shaders + uniforms + attribs for our 3D world,
                         // including ground-plane,                       
   part1Box.init(gl);		//  "		"		"  for 1st kind of shading & lighting
 	part2Box.init(gl);    //  "   "   "  for 2nd kind of shading & lighting
 	
-  gl.clearColor(0.2, 0.2, 0.2, 1);	  // RGBA color for clearing <canvas>
+  gl.clearColor(0, 0, 0, 1);	  // RGBA color for clearing <canvas>
   
   // ==============ANIMATION=============
   // Quick tutorials on synchronous, real-time animation in JavaScript/HTML-5: 
@@ -258,6 +267,18 @@ function drawAll() {
 //=============================================================================
   // Clear on-screen HTML-5 <canvas> object:
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  g_modelMatrix.setIdentity();
+  var vpAspect = g_canvasID.width /			// On-screen aspect ratio for
+    (g_canvasID.height);	// this camera: width/height.
+  g_modelMatrix.perspective(g_fov,			// fovy: y-axis field-of-view in degrees
+    // (top <-> bottom in view frustum)
+    vpAspect, // aspect ratio: width/height
+    g_near, g_far);	// near, far (always >0).
+
+  g_modelMatrix.lookAt(g_camera_pos[0], g_camera_pos[1], g_camera_pos[2], 				// 'Center' or 'Eye Point',
+    g_camera_look[0], g_camera_look[1], g_camera_look[2], 					// look-At point,
+    0, 1, 0);					// View UP vector, all in 'world' coords.
+  // For this viewport, set camera's eye point and the viewing volume:
 
 var b4Draw = Date.now();
 var b4Wait = b4Draw - g_lastMS;

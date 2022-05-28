@@ -139,19 +139,8 @@ function VBObox0() {
   '}\n';
 
 	this.vboContents = //---------------------------------------------------------
-	new Float32Array ([						// Array of vertex attribute values we will
-  															// transfer to GPU's vertex buffer object (VBO)
-	// 1st triangle:
-  	 0.0,	 0.5,	0.0, 1.0,		1.0, 0.0, 0.0, //1 vertex:pos x,y,z,w; color: r,g,b
-    -0.5, -0.5, 0.0, 1.0,		0.0, 1.0, 0.0,
-     0.5, -0.5, 0.0, 1.0,		0.0, 0.0, 1.0,
- // 2nd triangle:
-		 0.0,  0.0, 0.0, 1.0,   1.0, 1.0, 1.0,		// (white)
-		 0.3,  0.0, 0.0, 1.0,   0.0, 0.0, 1.0,		// (blue)
-		 0.0,  0.3, 0.0, 1.0,   0.5, 0.5, 0.5,		// (gray)
-		 ]);
-
-	this.vboVerts = 6;						// # of vertices held in 'vboContents' array
+	new Float32Array (makeGroundGrid());
+	this.vboVerts = this.vboContents.length/7;						// # of vertices held in 'vboContents' array
 	this.FSIZE = this.vboContents.BYTES_PER_ELEMENT;
 	                              // bytes req'd by 1 vboContents array element;
 																// (why? used to compute stride and offset 
@@ -160,7 +149,7 @@ function VBObox0() {
                                 // total number of bytes stored in vboContents
                                 // (#  of floats in vboContents array) * 
                                 // (# of bytes/float).
-	this.vboStride = this.vboBytes / this.vboVerts; 
+	this.vboStride = this.vboBytes / this.vboVerts;
 	                              // (== # of bytes to store one complete vertex).
 	                              // From any attrib in a given vertex in the VBO, 
 	                              // move forward by 'vboStride' bytes to arrive 
@@ -367,13 +356,14 @@ VBObox0.prototype.adjust = function() {
   						'.adjust() call you needed to call this.switchToMe()!!');
   }  
 	// Adjust values for our uniforms,
-  this.ModelMat.setRotate(g_angleNow0, 0, 0, 1);	  // rotate drawing axes,
-  this.ModelMat.translate(0.35, 0, 0);							// then translate them.
+  // this.ModelMat.setRotate(g_angleNow0, 0, 0, 1);	  // rotate drawing axes,
+  // this.ModelMat.translate(0.35, 0, 0);							// then translate them.
   //  Transfer new uniforms' values to the GPU:-------------
-  // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
+  // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform:
+  // console.log(g_modelMatrix)
   gl.uniformMatrix4fv(this.u_ModelMatLoc,	// GPU location of the uniform
   										false, 				// use matrix transpose instead?
-  										this.ModelMat.elements);	// send data from Javascript.
+  										g_modelMatrix.concat(this.ModelMat).elements);	// send data from Javascript.
   // Adjust the attributes' stride and offset (if necessary)
   // (use gl.vertexAttribPointer() calls and gl.enableVertexAttribArray() calls)
 }
@@ -388,7 +378,7 @@ VBObox0.prototype.draw = function() {
   						'.draw() call you needed to call this.switchToMe()!!');
   }  
   // ----------------------------Draw the contents of the currently-bound VBO:
-  gl.drawArrays(gl.TRIANGLES, 	    // select the drawing primitive to draw,
+  gl.drawArrays(gl.LINES, 	    // select the drawing primitive to draw,
                   // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
                   //          gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
   								0, 								// location of 1st vertex to draw;
@@ -750,7 +740,7 @@ VBObox1.prototype.adjust = function() {
   // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
   gl.uniformMatrix4fv(this.u_ModelMatrixLoc,	// GPU location of the uniform
   										false, 										// use matrix transpose instead?
-  										this.ModelMatrix.elements);	// send data from Javascript.
+                        g_modelMatrix.concat(this.ModelMatrix).elements);	// send data from Javascript.
 }
 
 VBObox1.prototype.draw = function() {
@@ -1100,8 +1090,8 @@ VBObox2.prototype.adjust = function() {
   //  Transfer new uniforms' values to the GPU:--------------------------------
   // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
   gl.uniformMatrix4fv(this.u_ModelMatrixLoc,	  // GPU location of the uniform
-  										false, 										// use matrix transpose instead?
-  										this.ModelMatrix.elements);	// send data from Javascript.
+    false, 										// use matrix transpose instead?
+    g_modelMatrix.concat(this.ModelMatrix).elements);	// send data from Javascript.
   // Adjust values in VBOcontents array-----------------------------------------
   // Make one dot-size grow/shrink;
   this.vboContents[15] = 15.0*(1.0 + Math.cos(Math.PI * 3.0 * g_angleNow1 / 180.0)); // radians
