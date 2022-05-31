@@ -114,7 +114,7 @@ var g_posMin1 = -1.0;
 // For mouse/keyboard:------------------------
 var g_show0 = 1;								// 0==Show, 1==Hide VBO0 contents on-screen.
 var g_show1 = 1;								// 	"					"			VBO1		"				"				" 
-var g_show2 = 1;                //  "         "     VBO2    "       "       "
+var g_show2 = 0;                //  "         "     VBO2    "       "       "
 
 var g_modelMatrix;
 
@@ -124,8 +124,10 @@ var g_camera_pos = [0, -5, 2]
 var g_camera_look = [0, 0, 0]
 var g_fov = 35
 var g_view_angel = 0
+var r = Math.sqrt(Math.pow(g_camera_look[0] - g_camera_pos[0], 2) + Math.pow(g_camera_look[1] - g_camera_pos[1], 2))
 
 function main() {
+  window.addEventListener("keydown", myKeyDown, false);
 //=============================================================================
   // Retrieve the HTML-5 <canvas> element where webGL will draw our pictures:
   g_canvasID = document.getElementById('webgl');	
@@ -277,7 +279,7 @@ function drawAll() {
 
   g_modelMatrix.lookAt(g_camera_pos[0], g_camera_pos[1], g_camera_pos[2], 				// 'Center' or 'Eye Point',
     g_camera_look[0], g_camera_look[1], g_camera_look[2], 					// look-At point,
-    0, 1, 0);					// View UP vector, all in 'world' coords.
+    0, 0, 1);					// View UP vector, all in 'world' coords.
   // For this viewport, set camera's eye point and the viewing volume:
 
 var b4Draw = Date.now();
@@ -327,4 +329,65 @@ function VBO2toggle() {
   if(g_show2 != 1) g_show2 = 1;			// show,
   else g_show2 = 0;									// hide.
   console.log('g_show2: '+g_show2);
+}
+
+function myKeyDown(kev) {
+  switch (kev.code) {
+    case "ArrowLeft":
+      var last_x = r * Math.sin(g_view_angel)
+      var last_y = r * (Math.cos(g_view_angel) - 1)
+      g_view_angel -= Math.PI/60
+      g_camera_look[0] += r * Math.sin(g_view_angel) - last_x
+      g_camera_look[1] += r * (Math.cos(g_view_angel) - 1) - last_y
+      console.log(r + " " + g_camera_look[0] + " " + g_camera_look[2])
+      break;
+    case "ArrowRight":
+      var last_x = r * Math.sin(g_view_angel)
+      var last_y = r * (Math.cos(g_view_angel) - 1)
+      g_view_angel += Math.PI/60
+      g_camera_look[0] += r * Math.sin(g_view_angel) - last_x
+      g_camera_look[1] += r * (Math.cos(g_view_angel) - 1) - last_y
+      console.log(r + " " + g_camera_look[0] + " " + g_camera_look[2])
+      break;
+    case "ArrowUp":
+      g_camera_look[2] += 0.1
+      break;
+    case "ArrowDown":
+      g_camera_look[2] -= 0.1
+      break;
+    case "KeyW":
+      var vec = [g_camera_pos[0] - g_camera_look[0], g_camera_pos[1] - g_camera_look[1], g_camera_pos[2] - g_camera_look[2]]
+      g_camera_look[0] -= 0.1 * vec[0]
+      g_camera_look[1] -= 0.1 * vec[1]
+      g_camera_look[2] -= 0.1 * vec[2]
+
+      g_camera_pos[0] -= 0.1 * vec[0]
+      g_camera_pos[1] -= 0.1 * vec[1]
+      g_camera_pos[2] -= 0.1 * vec[2]
+      break;
+    case "KeyA":
+      g_camera_look[0] -= 0.1 * Math.cos(g_view_angel)
+      g_camera_pos[0] -= 0.1 * Math.cos(g_view_angel)
+      g_camera_look[2] += 0.1 * Math.sin(g_view_angel)
+      g_camera_pos[2] += 0.1 * Math.sin(g_view_angel)
+      break;
+    case "KeyS":
+      var vec = [g_camera_pos[0] - g_camera_look[0], g_camera_pos[1] - g_camera_look[1], g_camera_pos[2] - g_camera_look[2]]
+      g_camera_look[0] += 0.1 * vec[0]
+      g_camera_look[1] += 0.1 * vec[1]
+      g_camera_look[2] += 0.1 * vec[2]
+
+      g_camera_pos[0] += 0.1 * vec[0]
+      g_camera_pos[1] += 0.1 * vec[1]
+      g_camera_pos[2] += 0.1 * vec[2]
+      break;
+    case "KeyD":
+      g_camera_look[0] += 0.1 * Math.cos(g_view_angel)
+      g_camera_pos[0] += 0.1 * Math.cos(g_view_angel)
+      g_camera_look[2] -= 0.1 * Math.sin(g_view_angel)
+      g_camera_pos[2] -= 0.1 * Math.sin(g_view_angel)
+      break;
+    default:
+      break;
+  }
 }

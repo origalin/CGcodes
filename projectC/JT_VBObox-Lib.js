@@ -493,7 +493,7 @@ function VBObox1() {
 	this.vboContents = //---------------------------------------------------------
 		new Float32Array ([					// Array of vertex attribute values we will
   															// transfer to GPU's vertex buffer object (VBO)
-			// 1 vertex per line: pos1 x,y,z,w;   colr1; r,g,b;   ptSiz1; 
+			// 1 vertex per line: pos1 x,y,z,w;   colr1; r,g,b;   ptSiz1;
   	-0.3,  0.7,	0.0, 1.0,		0.0, 1.0, 1.0,  17.0,
     -0.3, -0.3, 0.0, 1.0,		1.0, 0.0, 1.0,  20.0,
      0.3, -0.3, 0.0, 1.0,		1.0, 1.0, 0.0,  33.0,
@@ -1167,3 +1167,6 @@ VBObox2.prototype.restore = function() {
 //=============================================================================
 //=============================================================================
 //=============================================================================
+function objectsContents() {
+  return new Float32Array(generateSphere())
+}
