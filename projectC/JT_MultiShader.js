@@ -126,6 +126,13 @@ var g_fov = 35
 var g_view_angel = 0
 var r = Math.sqrt(Math.pow(g_camera_look[0] - g_camera_pos[0], 2) + Math.pow(g_camera_look[1] - g_camera_pos[1], 2))
 
+var g_light_mode = 1
+var g_light_enabled = true
+var lamp0pos = [3.0, -5.0, 5.0];
+var lamp0ambi = [0.4, 0.4, 0.4];
+var lamp0diff = [1.0, 1.0, 1.0];
+var lamp0spec = [1.0, 1.0, 1.0];
+
 function main() {
   window.addEventListener("keydown", myKeyDown, false);
 //=============================================================================
@@ -209,6 +216,9 @@ function main() {
     };
   //------------------------------------
   tick();                       // do it again!
+
+  window.addEventListener('resize', resizeCanvas, false);
+  resizeCanvas()
 }
 
 function timerAll() {
@@ -281,7 +291,7 @@ function drawAll() {
     g_camera_look[0], g_camera_look[1], g_camera_look[2], 					// look-At point,
     0, 0, 1);					// View UP vector, all in 'world' coords.
   // For this viewport, set camera's eye point and the viewing volume:
-
+  gl.viewport(0, 0, g_canvasID.width, g_canvasID.height);
 var b4Draw = Date.now();
 var b4Wait = b4Draw - g_lastMS;
 
@@ -368,8 +378,8 @@ function myKeyDown(kev) {
     case "KeyA":
       g_camera_look[0] -= 0.1 * Math.cos(g_view_angel)
       g_camera_pos[0] -= 0.1 * Math.cos(g_view_angel)
-      g_camera_look[2] += 0.1 * Math.sin(g_view_angel)
-      g_camera_pos[2] += 0.1 * Math.sin(g_view_angel)
+      g_camera_look[1] += 0.1 * Math.sin(g_view_angel)
+      g_camera_pos[1] += 0.1 * Math.sin(g_view_angel)
       break;
     case "KeyS":
       var vec = [g_camera_pos[0] - g_camera_look[0], g_camera_pos[1] - g_camera_look[1], g_camera_pos[2] - g_camera_look[2]]
@@ -384,10 +394,16 @@ function myKeyDown(kev) {
     case "KeyD":
       g_camera_look[0] += 0.1 * Math.cos(g_view_angel)
       g_camera_pos[0] += 0.1 * Math.cos(g_view_angel)
-      g_camera_look[2] -= 0.1 * Math.sin(g_view_angel)
-      g_camera_pos[2] -= 0.1 * Math.sin(g_view_angel)
+      g_camera_look[1] -= 0.1 * Math.sin(g_view_angel)
+      g_camera_pos[1] -= 0.1 * Math.sin(g_view_angel)
       break;
     default:
       break;
   }
+}
+
+function resizeCanvas() {
+  g_canvasID.width = innerWidth;
+  g_canvasID.height = innerHeight * 2 / 3;
+  drawAll();
 }
