@@ -71,5 +71,5 @@ function generateSphere() {
       sphVerts[j+4+3] = sphVerts[j+3]
     }
   }
-  return sphVerts
+  return Array.from(sphVerts)
 }

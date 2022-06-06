@@ -113,7 +113,10 @@ var g_pyra_start
 var g_tor_start
 var g_cyl_start
 
-var g_vboVerts
+var g_vboVerts_all
+var g_vboVerts_sphere
+var g_vboVerts_cube
+var g_vboVerts_tetrahedron
 var g_FSIZE
 var g_vboBytes
 var g_vboStride
@@ -125,7 +128,7 @@ var g_vboOffset_a_Normal
 {
   g_vboContents = objectsContents()
 
-  g_vboVerts = g_vboContents.length / 8;
+  g_vboVerts_all = g_vboContents.length / 8;
   g_FSIZE = g_vboContents.BYTES_PER_ELEMENT;
   // bytes req'd by 1 vboContents array element;
   // (why? used to compute stride and offset
@@ -133,7 +136,7 @@ var g_vboOffset_a_Normal
   g_vboBytes = g_vboContents.length * g_FSIZE;
   // (#  of floats in vboContents array) *
   // (# of bytes/float).
-  g_vboStride = g_vboBytes / g_vboVerts;
+  g_vboStride = g_vboBytes / g_vboVerts_all;
   // (== # of bytes to store one complete vertex).
   // From any attrib in a given vertex in the VBO,
   // move forward by 'vboStride' bytes to arrive
@@ -168,13 +171,13 @@ function VBObox0() {
 	this.VERT_SRC =	//--------------------- VERTEX SHADER source code 
   'precision highp float;\n' +				// req'd in OpenGL ES if we use 'float'
   //
-  'uniform mat4 u_ModelMat0;\n' +
+  'uniform mat4 u_ModelMat0, u_vpMat;\n' +
   'attribute vec4 a_Pos0;\n' +
   'attribute vec3 a_Colr0;\n'+
   'varying vec3 v_Colr0;\n' +
   //
   'void main() {\n' +
-  '  gl_Position = u_ModelMat0 * a_Pos0;\n' +
+  '  gl_Position = u_vpMat * u_ModelMat0 * a_Pos0;\n' +
   '	 v_Colr0 = a_Colr0;\n' +
   ' }\n';
 
@@ -294,9 +297,10 @@ VBObox0.prototype.init = function() {
   //  Find & save the GPU location of all our shaders' attribute-variables and 
   //  uniform-variables (for switchToMe(), adjust(), draw(), reload(),etc.)
   this.a_PosLoc = gl.getAttribLocation(this.shaderLoc, 'a_Pos0');
-  if(this.a_PosLoc < 0) {
+  this.u_vpMatLoc = gl.getUniformLocation(this.shaderLoc, 'u_vpMat');
+  if(this.a_PosLoc < 0 || this.u_vpMatLoc < 0) {
     console.log(this.constructor.name + 
-    						'.init() Failed to get GPU location of attribute a_Pos0');
+    						'.init() Failed to get GPU location of attribute a_Pos0 or u_vpMat');
     return -1;	// error exit.
   }
  	this.a_ColrLoc = gl.getAttribLocation(this.shaderLoc, 'a_Colr0');
@@ -410,7 +414,8 @@ VBObox0.prototype.adjust = function() {
   // console.log(g_modelMatrix)
   gl.uniformMatrix4fv(this.u_ModelMatLoc,	// GPU location of the uniform
   										false, 				// use matrix transpose instead?
-  										g_modelMatrix.concat(this.ModelMat).elements);	// send data from Javascript.
+  										this.ModelMat.elements);	// send data from Javascript.
+  gl.uniformMatrix4fv(this.u_vpMatLoc, false, g_viewportMatrix.elements);
   // Adjust the attributes' stride and offset (if necessary)
   // (use gl.vertexAttribPointer() calls and gl.enableVertexAttribArray() calls)
 }
@@ -518,7 +523,7 @@ function VBObox1() {
     'uniform MatlT u_MatlSet[1];\n' +		// Array of all materials.
 
 
-    'uniform mat4 u_ModelMatrix, u_normalMat; \n' +
+    'uniform mat4 u_ModelMatrix, u_normalMat, u_vpMat; \n' +
     'uniform int u_lightMode;    \n' +
 
     'uniform vec3 u_eyePosWorld; \n' + 	// Camera/eye location in world coords.
@@ -552,7 +557,7 @@ function VBObox1() {
     '	 vec3 speculr = u_LampSet[0].spec * u_MatlSet[0].spec * specular;\n' +
     '  v_color = vec4(emissive + ambient + diffuse + speculr , 1.0);\n' +
 
-    '  gl_Position = vertexPosition; \n' +
+    '  gl_Position = u_vpMat * vertexPosition; \n' +
     '} \n'
 /*
  // SQUARE dots:
@@ -599,7 +604,6 @@ function VBObox1() {
 	
 	            //---------------------- Uniform locations &values in our shaders
 	this.ModelMatrix = new Matrix4();	// Transforms CVV axes to model axes.
-  // this.ModelMatrix.setIdentity()
 	this.u_ModelMatrixLoc;						// GPU location for u_ModelMat uniform
   this.normalMat = new Matrix4()
 
@@ -689,11 +693,13 @@ VBObox1.prototype.init = function() {
 
   this.a_normalLoc = gl.getAttribLocation(this.shaderLoc, 'a_normal');
   this.u_normalMatLoc = gl.getUniformLocation(this.shaderLoc, 'u_normalMat');
+  this.u_vpMatLoc = gl.getUniformLocation(this.shaderLoc, 'u_vpMat');
   this.u_lightModeLoc = gl.getUniformLocation(this.shaderLoc, 'u_lightMode');
   this.u_eyePosWorldLoc = gl.getUniformLocation(this.shaderLoc, 'u_eyePosWorld');
 
   if (
     this.a_normalLoc < 0 ||
+    this.u_vpMatLoc < 0 ||
     !this.u_normalMatLoc ||
     !this.u_lightModeLoc ||
     !this.u_eyePosWorldLoc
@@ -822,21 +828,9 @@ VBObox1.prototype.adjust = function() {
   gl.uniform3fv(this.lamp0.u_diff, this.lamp0.I_diff.elements);		// diffuse
   gl.uniform3fv(this.lamp0.u_spec, this.lamp0.I_spec.elements);		// Specular
 
-  //---------------For the Material object(s):
-  gl.uniform3fv(this.matl0.uLoc_Ke, this.matl0.K_emit.slice(0, 3));				// Ke emissive
-  gl.uniform3fv(this.matl0.uLoc_Ka, this.matl0.K_ambi.slice(0, 3));				// Ka ambient
-  gl.uniform3fv(this.matl0.uLoc_Kd, this.matl0.K_diff.slice(0, 3));				// Kd	diffuse
-  gl.uniform3fv(this.matl0.uLoc_Ks, this.matl0.K_spec.slice(0, 3));				// Ks specular
-  gl.uniform1i(this.matl0.uLoc_Kshiny, parseInt(this.matl0.K_shiny, 10));     // Kshiny
-
-	// Adjust values for our uniforms,
-  this.ModelMatrix.setRotate(g_angleNow1, 0, 0, 1);	// -spin drawing axes,
-  setModelMatNormalMat(this)
   //  Transfer new uniforms' values to the GPU:-------------
-  // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
-  gl.uniformMatrix4fv(this.u_ModelMatrixLoc,	// GPU location of the uniform
-  										false, 										// use matrix transpose instead?
-                        g_modelMatrix.concat(this.ModelMatrix).elements);	// send data from Javascript.
+  // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform:
+  gl.uniformMatrix4fv(this.u_vpMatLoc, false, g_viewportMatrix.elements);
 }
 
 VBObox1.prototype.draw = function() {
@@ -848,13 +842,7 @@ VBObox1.prototype.draw = function() {
         console.log('ERROR! before' + this.constructor.name + 
   						'.draw() call you needed to call this.switchToMe()!!');
   }
-  
-  // ----------------------------Draw the contents of the currently-bound VBO:
-  gl.drawArrays(gl.TRIANGLE_STRIP,		    // select the drawing primitive to draw:
-                  // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
-                  //          gl.TRIANGLES, gl.TRIANGLE_STRIP,
-  							0, 								// location of 1st vertex to draw;
-  							g_vboVerts);		// number of vertices to draw on-screen.
+  drawAllObj(this)
 }
 
 
@@ -932,7 +920,7 @@ function VBObox2() {
 
     'uniform MatlT u_MatlSet[1];\n' +		// Array of all materials.
 
-    'uniform mat4  u_ModelMatrix, u_normalMat; \n' +
+    'uniform mat4  u_ModelMatrix, u_normalMat, u_vpMat; \n' +
 
     'varying vec4 v_color;  \n' +
     'varying vec3 v_Kd;  \n' +
@@ -940,7 +928,7 @@ function VBObox2() {
     'varying vec3 v_Normal;  \n' +
 
     'void main(){ \n' +
-    '  gl_Position = u_ModelMatrix * a_position;\n' +
+    '  gl_Position = u_vpMat * u_ModelMatrix * a_position;\n' +
     '  v_Position = u_ModelMatrix * a_position; \n' +
     '  v_Normal = normalize(vec3(u_normalMat * a_normal));\n' +
     //'	 v_Kd = u_Kd; \n' +		// find per-pixel diffuse reflectance from per-vertex
@@ -1028,8 +1016,7 @@ function VBObox2() {
 
   this.lamp0 = new LightsT();
 
-  this.matlSel = MATL_RED_PLASTIC;				// see keypress(): 'm' key changes matlSel
-  this.matl0 = new Material(this.matlSel);
+  this.matl0 = {};
 };
 
 
@@ -1102,10 +1089,11 @@ VBObox2.prototype.init = function() {
   }
   // c2) Find All Uniforms:-----------------------------------------------------
   //Get GPU storage location for each uniform var used in our shader programs: 
- this.u_ModelMatrixLoc = gl.getUniformLocation(this.shaderLoc, 'u_ModelMatrix');
-  if (!this.u_ModelMatrixLoc) { 
+  this.u_ModelMatrixLoc = gl.getUniformLocation(this.shaderLoc, 'u_ModelMatrix');
+  this.u_vpMatLoc = gl.getUniformLocation(this.shaderLoc, 'u_vpMat');
+  if (!this.u_ModelMatrixLoc || !this.u_vpMatLoc) {
     console.log(this.constructor.name + 
-    						'.init() failed to get GPU location for u_ModelMatrix uniform');
+    						'.init() failed to get GPU location for u_ModelMatrix or u_vpMat uniform');
     return;
   }
 
@@ -1244,25 +1232,7 @@ VBObox2.prototype.adjust = function() {
   gl.uniform3fv(this.lamp0.u_diff, this.lamp0.I_diff.elements);		// diffuse
   gl.uniform3fv(this.lamp0.u_spec, this.lamp0.I_spec.elements);		// Specular
 
-  //---------------For the Material object(s):
-  gl.uniform3fv(this.matl0.uLoc_Ke, this.matl0.K_emit.slice(0, 3));				// Ke emissive
-  gl.uniform3fv(this.matl0.uLoc_Ka, this.matl0.K_ambi.slice(0, 3));				// Ka ambient
-  gl.uniform3fv(this.matl0.uLoc_Kd, this.matl0.K_diff.slice(0, 3));				// Kd	diffuse
-  gl.uniform3fv(this.matl0.uLoc_Ks, this.matl0.K_spec.slice(0, 3));				// Ks specular
-  gl.uniform1i(this.matl0.uLoc_Kshiny, parseInt(this.matl0.K_shiny, 10));     // Kshiny
-
-	// Adjust values for our uniforms;-------------------------------------------
-  this.ModelMatrix.rotate(g_angleNow2, 0, 0, 1);	// -spin drawing axes,
-  setModelMatNormalMat(this)
-  //  Transfer new uniforms' values to the GPU:--------------------------------
-  // Send  new 'ModelMat' values to the GPU's 'u_ModelMat1' uniform: 
-  gl.uniformMatrix4fv(this.u_ModelMatrixLoc,	  // GPU location of the uniform
-    false, 										// use matrix transpose instead?
-    g_modelMatrix.concat(this.ModelMatrix).elements);	// send data from Javascript.
-  // Adjust values in VBOcontents array-----------------------------------------
-  // Make one dot-size grow/shrink;
-  // Transfer new VBOcontents to GPU-------------------------------------------- 
-
+  gl.uniformMatrix4fv(this.u_vpMatLoc, false, g_viewportMatrix.elements);
 }
 
 VBObox2.prototype.draw = function() {
@@ -1275,12 +1245,7 @@ VBObox2.prototype.draw = function() {
   }
 	
   // ----------------------------Draw the contents of the currently-bound VBO:
-  gl.drawArrays(gl.TRIANGLE_STRIP, 		    // select the drawing primitive to draw,
-                  // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP, 
-                  //          gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
-  							0, 								// location of 1st vertex to draw;
-  							g_vboVerts);		// number of vertices to draw on-screen.
-
+  drawAllObj(this)
 }
 
 VBObox2.prototype.reload = function() {
@@ -1329,7 +1294,13 @@ VBObox2.prototype.restore = function() {
 //=============================================================================
 //=============================================================================
 function objectsContents() {
-  return generateSphere()
+  let sphereVerts = generateSphere()
+  let cubeVerts = generateCube()
+  let tetrahedronVerts = generateTetrahedron()
+  g_vboVerts_sphere = sphereVerts.length / 8
+  g_vboVerts_cube = cubeVerts.length / 8
+  g_vboVerts_tetrahedron = tetrahedronVerts.length / 8
+  return new Float32Array([sphereVerts, cubeVerts, tetrahedronVerts].flat())
 }
 
 function setLamp(self) {
@@ -1360,10 +1331,114 @@ function setMat(self, mat) {
 }
 
 function setModelMatNormalMat(self) {
-  gl.uniformMatrix4fv(self.u_modelMatLoc, false, self.ModelMatrix.elements)
+  gl.uniformMatrix4fv(self.u_ModelMatrixLoc, false, self.ModelMatrix.elements)
 
   self.normalMat.setInverseOf(self.ModelMatrix)
   self.normalMat.transpose()
   gl.uniformMatrix4fv(self.u_normalMatLoc, false, self.normalMat.elements);
+}
 
+function drawSphere(self) {
+  setModelMatNormalMat(self)
+  gl.drawArrays(gl.TRIANGLE_STRIP,		    // select the drawing primitive to draw:
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP,
+    //          gl.TRIANGLES, gl.TRIANGLE_STRIP,
+    0, 								// location of 1st vertex to draw;
+    g_vboVerts_sphere);		// number of vertices to draw on-screen.
+}
+
+function drawQube(self) {
+  setModelMatNormalMat(self)
+  gl.drawArrays(gl.TRIANGLES, 		    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP,
+    //          gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    g_vboVerts_sphere, 								// location of 1st vertex to draw;
+    g_vboVerts_cube);		// number of vertices to draw on-screen.
+}
+
+function drawTetrahedron(self) {
+  setModelMatNormalMat(self)
+  gl.drawArrays(gl.TRIANGLES, 		    // select the drawing primitive to draw,
+    // choices: gl.POINTS, gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP,
+    //          gl.TRIANGLES, gl.TRIANGLE_STRIP, ...
+    g_vboVerts_sphere + g_vboVerts_cube, 								// location of 1st vertex to draw;
+    g_vboVerts_tetrahedron);		// number of vertices to draw on-screen.
+}
+
+function drawAllObj(self) {
+  updateMat(self, MATL_RED_PLASTIC)
+  self.ModelMatrix.setRotate(g_angleNow2, 0, 0, 1);
+  // ----------------------------Draw the contents of the currently-bound VBO:
+  drawSphere(self);
+
+  updateMat(self, MATL_BRONZE_SHINY)
+  self.ModelMatrix.setTranslate(2, 0, 0.4);
+  pushMatrix(self.ModelMatrix)
+  self.ModelMatrix.scale(0.2,0.2,0.4)
+  drawQube(self);
+  self.ModelMatrix = popMatrix()
+  self.ModelMatrix.rotate(g_angleNow1, 0, 1, 0)
+  pushMatrix(self.ModelMatrix)
+  self.ModelMatrix.scale(0.1,0.1,0.5)
+  self.ModelMatrix.translate(0, 0, 1.7);
+  drawQube(self);
+  self.ModelMatrix = popMatrix()
+  self.ModelMatrix.translate(0, 0, 1.4);
+  self.ModelMatrix.rotate(g_angleNow2, 0, 0, 1);
+  self.ModelMatrix.scale(0.1,0.5,0.1)
+  drawQube(self);
+
+  updateMat(self, MATL_SILVER_DULL)
+  self.ModelMatrix.setTranslate(-2, 2, 0);
+  self.ModelMatrix.rotate(g_angleNow2, 0, 0, 1);
+  drawTetrahedron(self);
+  pushMatrix(self.ModelMatrix)
+  self.ModelMatrix.rotate(g_angleNow1 * 0.4, 0, 0, 1);
+  self.ModelMatrix.translate(-Math.sqrt(0.75), -0.5, 0);
+  self.ModelMatrix.scale(0.2,0.2,0.2)
+  drawSphere(self);
+  self.ModelMatrix = popMatrix()
+  pushMatrix(self.ModelMatrix)
+  self.ModelMatrix.rotate(g_angleNow1 * 0.4, 0, 0, 1);
+  self.ModelMatrix.translate(Math.sqrt(0.75), -0.5, 0);
+  self.ModelMatrix.scale(0.2,0.2,0.2)
+  drawSphere(self);
+  self.ModelMatrix = popMatrix()
+  pushMatrix(self.ModelMatrix)
+  self.ModelMatrix.rotate(g_angleNow1 * 0.4, 0, 0, 1);
+  self.ModelMatrix.translate(0, 1, 0);
+  self.ModelMatrix.scale(0.2,0.2,0.2)
+  drawSphere(self);
+  self.ModelMatrix = popMatrix()
+
+  updateMat(self, MATL_BLU_PLASTIC)
+  self.ModelMatrix.setTranslate(-3, -2, 0);
+  self.ModelMatrix.translate(0,0,Math.sin(g_angleNow0)*0.3)
+  self.ModelMatrix.translate(0,0,Math.sqrt(2.0))
+  pushMatrix(self.ModelMatrix)
+  self.ModelMatrix.translate(0,0,-0.3)
+  self.ModelMatrix.rotate(180, 1, 0, 0)
+  self.ModelMatrix.rotate(g_angleNow2, 0, 0, 1);
+  drawTetrahedron(self);
+  self.ModelMatrix = popMatrix()
+  pushMatrix(self.ModelMatrix)
+  self.ModelMatrix.scale(0.3,0.3,0.3)
+  updateMat(self, MATL_GOLD_SHINY)
+  drawSphere(self)
+  updateMat(self, MATL_BLU_PLASTIC)
+  self.ModelMatrix = popMatrix()
+  self.ModelMatrix.translate(0,0,0.3)
+  self.ModelMatrix.rotate(g_angleNow2, 0, 0, 1);
+  drawTetrahedron(self);
+}
+
+function updateMat(self, id_mat){
+  mat = new Material(id_mat);
+  console.log(self.matl0)
+  //---------------For the Material object(s):
+  gl.uniform3fv(self.matl0.uLoc_Ke, mat.K_emit.slice(0, 3));				// Ke emissive
+  gl.uniform3fv(self.matl0.uLoc_Ka, mat.K_ambi.slice(0, 3));				// Ka ambient
+  gl.uniform3fv(self.matl0.uLoc_Kd, mat.K_diff.slice(0, 3));				// Kd	diffuse
+  gl.uniform3fv(self.matl0.uLoc_Ks, mat.K_spec.slice(0, 3));				// Ks specular
+  gl.uniform1i(self.matl0.uLoc_Kshiny, parseInt(mat.K_shiny, 10));     // Kshiny
 }

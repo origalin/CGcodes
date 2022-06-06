@@ -89,12 +89,12 @@ var g_lastMS = Date.now();			// Timestamp (in milliseconds) for our
                                 // time-varying params for our webGL drawings.
   // All time-dependent params (you can add more!)
 var g_angleNow0  =  0.0; 			  // Current rotation angle, in degrees.
-var g_angleRate0 = 45.0;				// Rotation angle rate, in degrees/second.
+var g_angleRate0 = 1.0;				// Rotation angle rate, in degrees/second.
                                 //---------------
-var g_angleNow1  = 100.0;       // current angle, in degrees
+var g_angleNow1  = 0.0;       // current angle, in degrees
 var g_angleRate1 =  95.0;        // rotation angle rate, degrees/sec
-var g_angleMax1  = 150.0;       // max, min allowed angle, in degrees
-var g_angleMin1  =  60.0;
+var g_angleMax1  = 30.0;       // max, min allowed angle, in degrees
+var g_angleMin1  =  -30.0;
                                 //---------------
 var g_angleNow2  =  0.0; 			  // Current rotation angle, in degrees.
 var g_angleRate2 = -62.0;				// Rotation angle rate, in degrees/second.
@@ -116,11 +116,11 @@ var g_show0 = 1;								// 0==Show, 1==Hide VBO0 contents on-screen.
 var g_show1 = 1;								// 	"					"			VBO1		"				"				" 
 var g_show2 = 0;                //  "         "     VBO2    "       "       "
 
-var g_modelMatrix;
+var g_viewportMatrix;
 
 var g_near = 1
 var g_far = 20
-var g_camera_pos = [0, -5, 2]
+var g_camera_pos = [0, -8, 3]
 var g_camera_look = [0, 0, 0]
 var g_fov = 35
 var g_view_angel = 0
@@ -180,7 +180,7 @@ function main() {
   //                           // (gl.LESS is DEFAULT; reverse it!)
   //------------------end 'REVERSED DEPTH' fix---------------------------------
 
-  g_modelMatrix = new Matrix4();
+  g_viewportMatrix = new Matrix4();
   // Initialize each of our 'vboBox' objects: 
   worldBox.init(gl);		// VBO + shaders + uniforms + attribs for our 3D world,
                         // including ground-plane,                       
@@ -279,15 +279,15 @@ function drawAll() {
 //=============================================================================
   // Clear on-screen HTML-5 <canvas> object:
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  g_modelMatrix.setIdentity();
+  g_viewportMatrix.setIdentity();
   var vpAspect = g_canvasID.width /			// On-screen aspect ratio for
     (g_canvasID.height);	// this camera: width/height.
-  g_modelMatrix.perspective(g_fov,			// fovy: y-axis field-of-view in degrees
+  g_viewportMatrix.perspective(g_fov,			// fovy: y-axis field-of-view in degrees
     // (top <-> bottom in view frustum)
     vpAspect, // aspect ratio: width/height
     g_near, g_far);	// near, far (always >0).
 
-  g_modelMatrix.lookAt(g_camera_pos[0], g_camera_pos[1], g_camera_pos[2], 				// 'Center' or 'Eye Point',
+  g_viewportMatrix.lookAt(g_camera_pos[0], g_camera_pos[1], g_camera_pos[2], 				// 'Center' or 'Eye Point',
     g_camera_look[0], g_camera_look[1], g_camera_look[2], 					// look-At point,
     0, 0, 1);					// View UP vector, all in 'world' coords.
   // For this viewport, set camera's eye point and the viewing volume:
