@@ -320,9 +320,8 @@ console.log("wait b4 draw: ", b4Wait, "drawWait: ", drawWait, "mSec");
 function VBO0toggle() {
 //=============================================================================
 // Called when user presses HTML-5 button 'Show/Hide VBO0'.
-  if(g_show0 != 1) g_show0 = 1;				// show,
-  else g_show0 = 0;										// hide.
-  console.log('g_show0: '+g_show0);
+  if(g_light_enabled != 1) g_light_enabled = 1;				// show,
+  else g_light_enabled = 0;										// hide.
 }
 
 function VBO1toggle() {
@@ -403,7 +402,87 @@ function myKeyDown(kev) {
 }
 
 function resizeCanvas() {
-  g_canvasID.width = innerWidth;
+  g_canvasID.width = innerWidth - 10;
   g_canvasID.height = innerHeight * 2 / 3;
   drawAll();
+}
+
+function update_light_pos_x(val) {
+  lamp0pos[0] = val
+  document.getElementById('lpx').innerHTML = val
+}
+
+function update_light_pos_y(val) {
+  lamp0pos[1] = val
+  document.getElementById('lpy').innerHTML = val
+}
+
+function update_light_pos_z(val) {
+  lamp0pos[2] = val
+  document.getElementById('lpz').innerHTML = val
+}
+
+function update_light_amb_r(val) {
+  lamp0ambi[0] = val/255
+  document.getElementById('lar').innerHTML = val
+}
+
+function update_light_amb_g(val) {
+  lamp0ambi[1] = val/255
+  document.getElementById('lag').innerHTML = val
+}
+
+function update_light_amb_b(val) {
+  lamp0ambi[2] = val/255
+  document.getElementById('lab').innerHTML = val
+}
+
+function update_light_diff_r(val) {
+  lamp0diff[0] = val/255
+  document.getElementById('ldr').innerHTML = val
+}
+
+function update_light_diff_g(val) {
+  lamp0diff[1] = val/255
+  document.getElementById('ldg').innerHTML = val
+}
+
+function update_light_diff_b(val) {
+  lamp0diff[2] = val/255
+  document.getElementById('ldb').innerHTML = val
+}
+
+function update_light_spec_r(val) {
+  lamp0spec[0] = val/255
+  document.getElementById('lsr').innerHTML = val
+}
+
+function update_light_spec_g(val) {
+  lamp0spec[1] = val/255
+  document.getElementById('lsg').innerHTML = val
+}
+
+function update_light_spec_b(val) {
+  lamp0spec[2] = val/255
+  document.getElementById('lsb').innerHTML = val
+}
+
+function lightSelectChange() {
+  var light = document.getElementById("light").value;
+  if (light === "phong-light") {
+    g_light_mode = 1
+  } else {
+    g_light_mode = 0
+  }
+}
+
+function shadingSelectChange() {
+  var shading = document.getElementById("shading").value;
+  if (shading === "gouraud-shading") {
+    g_show1 = 1
+    g_show2 = 0
+  } else {
+    g_show1 = 0
+    g_show2 = 1
+  }
 }

@@ -1,34 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
+<head>
+    <meta charset="utf-8"/>
     <title>JT_Multi-Shader</title>
-  </head>
-
-  <body onload="main()">
-    <canvas id="webgl" width="600" height="600">
+</head>
+<style>
+    .grid {
+        display: inline-block;
+        width: 24%;
+    }
+</style>
+<body onload="main()">
+<canvas id="webgl" width="600" height="600">
     Please use a browser that supports "canvas"
-    </canvas>
-    <p>
-      <button type="button" onclick="VBO0toggle()">VBO-0 hide/show</button>
-      <button type="button" onclick="VBO1toggle()">VBO-1 hide/show</button>
-      <button type="button" onclick="VBO2toggle()">VBO-2 hide/show</button>
-    </p>
-    <script src="grid.js"></script>
-    <script src="sphere.js"></script>
-    <script src="tetrahedron.js"></script>
-    <script src="cube.js"></script>
-    <script src="lights-JT.js"></script>
-    <script src="materials_Ayerdi.js"></script>
-    <script src="lib/webgl-utils.js"></script>
-    <script src="lib/webgl-debug.js"></script>
-    <script src="lib/cuon-utils.js"></script>
-    <script src="lib/cuon-matrix-quat03.js"></script>
-    <!-- YOU SHOULD UPGRADE to Brandon Jones' far-faster,
-          far more complete vector/matrix/quaternion library: (Google it!)
-            <script src="../lib/glmatrix.js"></script>
-    -->
-    <script src="JT_VBObox-Lib.js"></script>
-    <script src="JT_MultiShader.js"></script>
-  </body>
+</canvas>
+<div class="grid">
+  <button type="button" onclick="VBO0toggle()">Light on/off</button> <br>
+  <p>
+    <label for="light">Lighting mode:</label>
+    <select name="light" id="light" onchange="lightSelectChange()">
+      <option value="phong-light">Phong</option>
+      <option value="blinnphong-light">Blinn-Phong</option>
+    </select>
+    </br>
+    <label for="shading">Shading mode:</label>
+    <select name="shading" id="shading" onchange="shadingSelectChange()">
+      <option value="gouraud-shading">Gouraud Shading</option>
+      <option value="phong-shading">Phong Shading</option>
+    </select>
+  </p>
+</div>
+
+<div class="grid" style="width: 75%">
+      <span style="color: red">
+        Use "WASD" to move the camera and use arrows to change the lookAt direction <br>
+        ("W" "S" to move forward/back forward and "A" "D" to move horizontally) <br>
+        ("↑↓" for pitch and "←→" for strafe)<br>
+    </span>
+</div>
+
+<div class="grid">
+    <p>Light Position:</p>
+    <label>
+        X:
+        <input class="slider" type="range" min="-10" max="10" value="3" oninput="update_light_pos_x(this.value)">
+        <span id='lpx'>3.0</span>
+    </label> <br>
+    <label>
+        Y:
+        <input class="slider" type="range" min="-10" max="10" value="-5" oninput="update_light_pos_y(this.value)">
+        <span id='lpy'>-5.0</span>
+    </label> <br>
+    <label>
+        Z:
+        <input class="slider" type="range" min="-10" max="10" value="5" oninput="update_light_pos_z(this.value)">
+        <span id='lpz'>5.0</span>
+    </label> <br>
+</div>
+<div class="grid">
+    <p>Light Ambient:</p>
+    <label>
+        R:
+        <input class="slider" type="range" min="0" max="255" value="102" oninput="update_light_amb_r(this.value)">
+        <span id='lar'>102</span>
+    </label> <br>
+    <label>
+        G:
+        <input class="slider" type="range" min="0" max="255" value="102" oninput="update_light_amb_g(this.value)">
+        <span id='lag'>102</span>
+    </label> <br>
+    <label>
+        B:
+        <input class="slider" type="range" min="0" max="255" value="102" oninput="update_light_amb_b(this.value)">
+        <span id='lab'>102</span>
+    </label> <br>
+</div>
+<div class="grid">
+    <p>Light Diffuse:</p>
+    <label>
+        R:
+        <input class="slider" type="range" min="0" max="255" value="255" oninput="update_light_diff_r(this.value)">
+        <span id='ldr'>255</span>
+    </label> <br>
+    <label>
+        G:
+        <input class="slider" type="range" min="0" max="255" value="255" oninput="update_light_diff_g(this.value)">
+        <span id='ldg'>255</span>
+    </label> <br>
+    <label>
+        B:
+        <input class="slider" type="range" min="0" max="255" value="255" oninput="update_light_diff_b(this.value)">
+        <span id='ldb'>255</span>
+    </label> <br>
+</div>
+<div class="grid">
+    <p>Light Specular:</p>
+    <label>
+        R:
+        <input class="slider" type="range" min="0" max="255" value="255" oninput="update_light_spec_r(this.value)">
+        <span id='lsr'>255</span>
+    </label> <br>
+    <label>
+        G:
+        <input class="slider" type="range" min="0" max="255" value="255" oninput="update_light_spec_g(this.value)">
+        <span id='lsg'>255</span>
+    </label> <br>
+    <label>
+        B:
+        <input class="slider" type="range" min="0" max="255" value="255" oninput="update_light_spec_b(this.value)">
+        <span id='lsb'>255</span>
+    </label> <br>
+</div>
+
+<script src="grid.js"></script>
+<script src="sphere.js"></script>
+<script src="tetrahedron.js"></script>
+<script src="cube.js"></script>
+<script src="lights-JT.js"></script>
+<script src="materials_Ayerdi.js"></script>
+<script src="lib/webgl-utils.js"></script>
+<script src="lib/webgl-debug.js"></script>
+<script src="lib/cuon-utils.js"></script>
+<script src="lib/cuon-matrix-quat03.js"></script>
+<!-- YOU SHOULD UPGRADE to Brandon Jones' far-faster,
+      far more complete vector/matrix/quaternion library: (Google it!)
+        <script src="../lib/glmatrix.js"></script>
+-->
+<script src="JT_VBObox-Lib.js"></script>
+<script src="JT_MultiShader.js"></script>
+</body>
 </html>
