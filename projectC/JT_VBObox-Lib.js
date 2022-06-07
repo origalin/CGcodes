@@ -103,16 +103,6 @@ As each 'VBObox' object can contain:
 
 var g_vboContents
 
-var g_sphere_verts
-var g_pyramide_verts
-var g_tor_verts
-var g_cyl_verts
-
-var g_sphere_start
-var g_pyra_start
-var g_tor_start
-var g_cyl_start
-
 var g_vboVerts_all
 var g_vboVerts_sphere
 var g_vboVerts_cube
@@ -124,6 +114,11 @@ var g_vboFcount_a_Pos1
 var g_vboFcount_a_Normal
 var g_vboOffset_a_Pos1
 var g_vboOffset_a_Normal
+
+var g_lamp0pos = [3.0, -5.0, 5.0];
+var g_lamp0ambi = [0.4, 0.4, 0.4];
+var g_lamp0diff = [1.0, 1.0, 1.0];
+var g_lamp0spec = [1.0, 1.0, 1.0];
 
 {
   g_vboContents = objectsContents()
@@ -542,14 +537,14 @@ function VBObox1() {
 
     '  float e64 = 0.0; \n' +
     '  if(u_lightMode == 0) { \n' +
-    '    vec3 H = normalize(lightDirection + eyeDirection); \n' +
-    '    float nDotH = max(dot(H, normal), 0.0); \n' +
-    '    e64 = pow(nDotH, float(u_MatlSet[0].shiny)); \n' +
-    '  } else { \n' +
     '    vec3 R = reflect(lightDirection, normal);      // Reflected light vector \n' +
     '    vec3 V = normalize(eyeDirection); // Vector to viewer \n' +
     '    float specAngle = max(dot(-R, V), 0.0); \n' +
     '    e64 = pow(specAngle, float(u_MatlSet[0].shiny)); \n' +
+    '  } else { \n' +
+    '    vec3 H = normalize(lightDirection + eyeDirection); \n' +
+    '    float nDotH = max(dot(H, normal), 0.0); \n' +
+    '    e64 = pow(nDotH, float(u_MatlSet[0].shiny)); \n' +
     '  } \n' +
 
     '	 vec3 emissive = 										u_MatlSet[0].emit;' +
@@ -794,18 +789,18 @@ VBObox1.prototype.adjust = function() {
         console.log('ERROR! before' + this.constructor.name + 
   						'.adjust() call you needed to call this.switchToMe()!!');
   }
-  this.lamp0.I_pos.elements.set(lamp0pos);
-  if (g_light_enabled) {
-    this.lamp0.I_ambi.elements.set(lamp0ambi);
-    this.lamp0.I_diff.elements.set(lamp0diff);
-    this.lamp0.I_spec.elements.set(lamp0spec);
+  this.lamp0.I_pos.elements.set(g_lamp0pos);
+  if (g_light_on) {
+    this.lamp0.I_ambi.elements.set(g_lamp0ambi);
+    this.lamp0.I_diff.elements.set(g_lamp0diff);
+    this.lamp0.I_spec.elements.set(g_lamp0spec);
   } else {
     this.lamp0.I_ambi.elements.set([0, 0, 0]);
     this.lamp0.I_diff.elements.set([0, 0, 0]);
     this.lamp0.I_spec.elements.set([0, 0, 0]);
   }
 
-  gl.uniform1i(this.u_lightModeLoc, g_light_mode)
+  gl.uniform1i(this.u_lightModeLoc, g_light_method)
   gl.uniform3f(this.u_eyePosWorldLoc, g_camera_pos[0], g_camera_pos[1], g_camera_pos[2]);
 
   gl.uniform3fv(this.lamp0.u_pos, this.lamp0.I_pos.elements.slice(0, 3));
@@ -962,14 +957,14 @@ function VBObox2() {
 
     '  float e64 = 0.0; \n' +
     '  if(u_lightMode == 0) { \n' +
-    '    vec3 H = normalize(lightDirection + eyeDirection); \n' +
-    '    float nDotH = max(dot(H, normal), 0.0); \n' +
-    '    e64 = pow(nDotH, float(u_MatlSet[0].shiny)); \n' +
-    '  } else { \n' +
     '    vec3 R = reflect(lightDirection, normal);      // Reflected light vector \n' +
     '    vec3 V = normalize(eyeDirection); // Vector to viewer \n' +
     '    float specAngle = max(dot(-R, V), 0.0); \n' +
     '    e64 = pow(specAngle, float(u_MatlSet[0].shiny)); \n' +
+    '  } else { \n' +
+    '    vec3 H = normalize(lightDirection + eyeDirection); \n' +
+    '    float nDotH = max(dot(H, normal), 0.0); \n' +
+    '    e64 = pow(nDotH, float(u_MatlSet[0].shiny)); \n' +
     '  } \n' +
 
     '	 vec3 emissive = 										u_MatlSet[0].emit;' +
@@ -978,9 +973,9 @@ function VBObox2() {
     '	 vec3 speculr = u_LampSet[0].spec * u_MatlSet[0].spec * e64;\n' +
     '  gl_FragColor = vec4(emissive + ambient + diffuse + speculr , 1.0);\n' +
     '}\n';
-                                
+
 	            //-----------------------GPU memory locations:
-	this.vboLoc;									// GPU Location for Vertex Buffer Object, 
+	this.vboLoc;									// GPU Location for Vertex Buffer Object,
 	                              // returned by gl.createBuffer() function call
 	this.shaderLoc;								// GPU Location for compiled Shader-program  
 	                            	// set by compile/link of VERT_SRC and FRAG_SRC.
@@ -1185,18 +1180,18 @@ VBObox2.prototype.adjust = function() {
         console.log('ERROR! before' + this.constructor.name + 
   						'.adjust() call you needed to call this.switchToMe()!!');
   }
-  this.lamp0.I_pos.elements.set(lamp0pos);
-  if (g_light_enabled) {
-    this.lamp0.I_ambi.elements.set(lamp0ambi);
-    this.lamp0.I_diff.elements.set(lamp0diff);
-    this.lamp0.I_spec.elements.set(lamp0spec);
+  this.lamp0.I_pos.elements.set(g_lamp0pos);
+  if (g_light_on) {
+    this.lamp0.I_ambi.elements.set(g_lamp0ambi);
+    this.lamp0.I_diff.elements.set(g_lamp0diff);
+    this.lamp0.I_spec.elements.set(g_lamp0spec);
   } else {
     this.lamp0.I_ambi.elements.set([0, 0, 0]);
     this.lamp0.I_diff.elements.set([0, 0, 0]);
     this.lamp0.I_spec.elements.set([0, 0, 0]);
   }
 
-  gl.uniform1i(this.u_lightModeLoc, g_light_mode)
+  gl.uniform1i(this.u_lightModeLoc, g_light_method)
   gl.uniform3f(this.u_eyePosWorldLoc, g_camera_pos[0], g_camera_pos[1], g_camera_pos[2]);
 
   gl.uniform3fv(this.lamp0.u_pos, this.lamp0.I_pos.elements.slice(0, 3));
@@ -1273,19 +1268,6 @@ function objectsContents() {
   g_vboVerts_cube = cubeVerts.length / 8
   g_vboVerts_tetrahedron = tetrahedronVerts.length / 8
   return new Float32Array([sphereVerts, cubeVerts, tetrahedronVerts].flat())
-}
-
-function setMat(self, mat) {
-  self.matl0.setMatl(mat);								// set new material reflectances,
-
-  //---------------For the Material object(s):
-  gl.uniform3fv(self.matl0.uLoc_Ke, self.matl0.K_emit.slice(0, 3));				// Ke emissive
-  gl.uniform3fv(self.matl0.uLoc_Ka, self.matl0.K_ambi.slice(0, 3));				// Ka ambient
-  gl.uniform3fv(self.matl0.uLoc_Kd, self.matl0.K_diff.slice(0, 3));				// Kd	diffuse
-  gl.uniform3fv(self.matl0.uLoc_Ks, self.matl0.K_spec.slice(0, 3));				// Ks specular
-  gl.uniform1i(self.matl0.uLoc_Kshiny, parseInt(self.matl0.K_shiny, 10));     // Kshiny
-
-
 }
 
 function uniformMats(self) {

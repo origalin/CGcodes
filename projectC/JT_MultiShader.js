@@ -74,7 +74,7 @@ VBOboxes.  Move all the uniform-adjusting operations from that JS function into 
 // ============================================================================
 // for WebGL usage:--------------------
 var gl;													// WebGL rendering context -- the 'webGL' object
-																// in JavaScript with all its member fcns & data
+// in JavaScript with all its member fcns & data
 var g_canvasID;									// HTML-5 'canvas' element ID#
 
 // For multiple VBOs & Shaders:-----------------
@@ -84,32 +84,32 @@ part2Box = new VBObox2();     // "  "  for second set of custom-shaded 3D parts
 
 // For animation:---------------------
 var g_lastMS = Date.now();			// Timestamp (in milliseconds) for our 
-                                // most-recently-drawn WebGL screen contents.  
-                                // Set & used by moveAll() fcn to update all
-                                // time-varying params for our webGL drawings.
-  // All time-dependent params (you can add more!)
-var g_angleNow0  =  0.0; 			  // Current rotation angle, in degrees.
+// most-recently-drawn WebGL screen contents.
+// Set & used by moveAll() fcn to update all
+// time-varying params for our webGL drawings.
+// All time-dependent params (you can add more!)
+var g_angleNow0 = 0.0; 			  // Current rotation angle, in degrees.
 var g_angleRate0 = 1.0;				// Rotation angle rate, in degrees/second.
-                                //---------------
-var g_angleNow1  = 0.0;       // current angle, in degrees
-var g_angleRate1 =  95.0;        // rotation angle rate, degrees/sec
-var g_angleMax1  = 30.0;       // max, min allowed angle, in degrees
-var g_angleMin1  =  -30.0;
-                                //---------------
-var g_angleNow2  =  0.0; 			  // Current rotation angle, in degrees.
-var g_angleRate2 = -62.0;				// Rotation angle rate, in degrees/second.
+//---------------
+var g_angleNow1 = 0.0;       // current angle, in degrees
+var g_angleRate1 = 95.0;        // rotation angle rate, degrees/sec
+var g_angleMax1 = 30.0;       // max, min allowed angle, in degrees
+var g_angleMin1 = -30.0;
+//---------------
+var g_angleNow2 = 0.0; 			  // Current rotation angle, in degrees.
+var g_angleRate2 = -30.0;				// Rotation angle rate, in degrees/second.
 
-                                //---------------
-var g_posNow0 =  0.0;           // current position
+//---------------
+var g_posNow0 = 0.0;           // current position
 var g_posRate0 = 0.6;           // position change rate, in distance/second.
-var g_posMax0 =  0.5;           // max, min allowed for g_posNow;
-var g_posMin0 = -0.5;           
-                                // ------------------
-var g_posNow1 =  0.0;           // current position
+var g_posMax0 = 0.5;           // max, min allowed for g_posNow;
+var g_posMin0 = -0.5;
+// ------------------
+var g_posNow1 = 0.0;           // current position
 var g_posRate1 = 0.5;           // position change rate, in distance/second.
-var g_posMax1 =  1.0;           // max, min allowed positions
+var g_posMax1 = 1.0;           // max, min allowed positions
 var g_posMin1 = -1.0;
-                                //---------------
+//---------------
 
 // For mouse/keyboard:------------------------
 var g_show0 = 1;								// 0==Show, 1==Hide VBO0 contents on-screen.
@@ -119,25 +119,21 @@ var g_show2 = 0;                //  "         "     VBO2    "       "       "
 var g_viewportMatrix;
 
 var g_near = 1
-var g_far = 20
+var g_far = 30
 var g_camera_pos = [0, -8, 3]
 var g_camera_look = [0, 0, 0]
-var g_fov = 35
+var g_fov = 30
 var g_view_angel = 0
 var r = Math.sqrt(Math.pow(g_camera_look[0] - g_camera_pos[0], 2) + Math.pow(g_camera_look[1] - g_camera_pos[1], 2))
 
-var g_light_mode = 1
-var g_light_enabled = true
-var lamp0pos = [3.0, -5.0, 5.0];
-var lamp0ambi = [0.4, 0.4, 0.4];
-var lamp0diff = [1.0, 1.0, 1.0];
-var lamp0spec = [1.0, 1.0, 1.0];
+var g_light_method = 0
+var g_light_on = true
 
 function main() {
   window.addEventListener("keydown", myKeyDown, false);
 //=============================================================================
   // Retrieve the HTML-5 <canvas> element where webGL will draw our pictures:
-  g_canvasID = document.getElementById('webgl');	
+  g_canvasID = document.getElementById('webgl');
   // Create the the WebGL rendering context: one giant JavaScript object that
   // contains the WebGL state machine adjusted by large sets of WebGL functions,
   // built-in variables & parameters, and member data. Every WebGL function call
@@ -149,11 +145,11 @@ function main() {
   // will follow this format:  gl.WebGLfunctionName(args);
   //SIMPLE VERSION:  gl = getWebGLContext(g_canvasID); 
   // Here's a BETTER version:
-  gl = g_canvasID.getContext("webgl", { preserveDrawingBuffer: true});
-	// This fancier-looking version disables HTML-5's default screen-clearing, so 
-	// that our drawMain() 
-	// function will over-write previous on-screen results until we call the 
-	// gl.clear(COLOR_BUFFER_BIT); function. )
+  gl = g_canvasID.getContext("webgl", {preserveDrawingBuffer: true});
+  // This fancier-looking version disables HTML-5's default screen-clearing, so
+  // that our drawMain()
+  // function will over-write previous on-screen results until we call the
+  // gl.clear(COLOR_BUFFER_BIT); function. )
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -183,12 +179,12 @@ function main() {
   g_viewportMatrix = new Matrix4();
   // Initialize each of our 'vboBox' objects: 
   worldBox.init(gl);		// VBO + shaders + uniforms + attribs for our 3D world,
-                        // including ground-plane,                       
+  // including ground-plane,
   part1Box.init(gl);		//  "		"		"  for 1st kind of shading & lighting
-	part2Box.init(gl);    //  "   "   "  for 2nd kind of shading & lighting
-	
+  part2Box.init(gl);    //  "   "   "  for 2nd kind of shading & lighting
+
   gl.clearColor(0, 0, 0, 1);	  // RGBA color for clearing <canvas>
-  
+
   // ==============ANIMATION=============
   // Quick tutorials on synchronous, real-time animation in JavaScript/HTML-5: 
   //    https://webglfundamentals.org/webgl/lessons/webgl-animation.html
@@ -207,13 +203,13 @@ function main() {
   //			to the ACTUAL time interval between displayed frames instead of fixed
   //		 	fixed-time 'setInterval()' calls that may take longer than expected.
   //------------------------------------
-  var tick = function() {		    // locally (within main() only), define our 
-                                // self-calling animation function. 
+  var tick = function () {		    // locally (within main() only), define our
+    // self-calling animation function.
     requestAnimationFrame(tick, g_canvasID); // browser callback request; wait
-                                // til browser is ready to re-draw canvas, then
+    // til browser is ready to re-draw canvas, then
     timerAll();  // Update all time-varying params, and
     drawAll();                // Draw all the VBObox contents
-    };
+  };
   //------------------------------------
   tick();                       // do it again!
 
@@ -228,50 +224,47 @@ function timerAll() {
   var nowMS = Date.now();             // current time (in milliseconds)
   var elapsedMS = nowMS - g_lastMS;   // 
   g_lastMS = nowMS;                   // update for next webGL drawing.
-  if(elapsedMS > 1000.0) {            
+  if (elapsedMS > 1000.0) {
     // Browsers won't re-draw 'canvas' element that isn't visible on-screen 
     // (user chose a different browser tab, etc.); when users make the browser
     // window visible again our resulting 'elapsedMS' value has gotten HUGE.
     // Instead of allowing a HUGE change in all our time-dependent parameters,
     // let's pretend that only a nominal 1/30th second passed:
-    elapsedMS = 1000.0/30.0;
-    }
+    elapsedMS = 1000.0 / 30.0;
+  }
   // Find new time-dependent parameters using the current or elapsed time:
   // Continuous rotation:
   g_angleNow0 = g_angleNow0 + (g_angleRate0 * elapsedMS) / 1000.0;
   g_angleNow1 = g_angleNow1 + (g_angleRate1 * elapsedMS) / 1000.0;
   g_angleNow2 = g_angleNow2 + (g_angleRate2 * elapsedMS) / 1000.0;
   g_angleNow0 %= 360.0;   // keep angle >=0.0 and <360.0 degrees  
-  g_angleNow1 %= 360.0;   
+  g_angleNow1 %= 360.0;
   g_angleNow2 %= 360.0;
-  if(g_angleNow1 > g_angleMax1) { // above the max?
+  if (g_angleNow1 > g_angleMax1) { // above the max?
     g_angleNow1 = g_angleMax1;    // move back down to the max, and
     g_angleRate1 = -g_angleRate1; // reverse direction of change.
-    }
-  else if(g_angleNow1 < g_angleMin1) {  // below the min?
+  } else if (g_angleNow1 < g_angleMin1) {  // below the min?
     g_angleNow1 = g_angleMin1;    // move back up to the min, and
     g_angleRate1 = -g_angleRate1;
-    }
+  }
   // Continuous movement:
   g_posNow0 += g_posRate0 * elapsedMS / 1000.0;
   g_posNow1 += g_posRate1 * elapsedMS / 1000.0;
   // apply position limits
-  if(g_posNow0 > g_posMax0) {   // above the max?
+  if (g_posNow0 > g_posMax0) {   // above the max?
     g_posNow0 = g_posMax0;      // move back down to the max, and
     g_posRate0 = -g_posRate0;   // reverse direction of change
-    }
-  else if(g_posNow0 < g_posMin0) {  // or below the min? 
+  } else if (g_posNow0 < g_posMin0) {  // or below the min?
     g_posNow0 = g_posMin0;      // move back up to the min, and
     g_posRate0 = -g_posRate0;   // reverse direction of change.
-    }
-  if(g_posNow1 > g_posMax1) {   // above the max?
+  }
+  if (g_posNow1 > g_posMax1) {   // above the max?
     g_posNow1 = g_posMax1;      // move back down to the max, and
     g_posRate1 = -g_posRate1;   // reverse direction of change
-    }
-  else if(g_posNow1 < g_posMin1) {  // or below the min? 
+  } else if (g_posNow1 < g_posMin1) {  // or below the min?
     g_posNow1 = g_posMin1;      // move back up to the min, and
     g_posRate1 = -g_posRate1;   // reverse direction of change.
-    }
+  }
 
 }
 
@@ -292,52 +285,35 @@ function drawAll() {
     0, 0, 1);					// View UP vector, all in 'world' coords.
   // For this viewport, set camera's eye point and the viewing volume:
   gl.viewport(0, 0, g_canvasID.width, g_canvasID.height);
-var b4Draw = Date.now();
-var b4Wait = b4Draw - g_lastMS;
+  var b4Draw = Date.now();
+  var b4Wait = b4Draw - g_lastMS;
 
-	if(g_show0 == 1) {	// IF user didn't press HTML button to 'hide' VBO0:
-	  worldBox.switchToMe();  // Set WebGL to render from this VBObox.
-		worldBox.adjust();		  // Send new values for uniforms to the GPU, and
-		worldBox.draw();			  // draw our VBO's contents using our shaders.
+  if (g_show0 == 1) {	// IF user didn't press HTML button to 'hide' VBO0:
+    worldBox.switchToMe();  // Set WebGL to render from this VBObox.
+    worldBox.adjust();		  // Send new values for uniforms to the GPU, and
+    worldBox.draw();			  // draw our VBO's contents using our shaders.
   }
-  if(g_show1 == 1) { // IF user didn't press HTML button to 'hide' VBO1:
+  if (g_show1 == 1) { // IF user didn't press HTML button to 'hide' VBO1:
     part1Box.switchToMe();  // Set WebGL to render from this VBObox.
-  	part1Box.adjust();		  // Send new values for uniforms to the GPU, and
-  	part1Box.draw();			  // draw our VBO's contents using our shaders.
-	  }
-	if(g_show2 == 1) { // IF user didn't press HTML button to 'hide' VBO2:
-	  part2Box.switchToMe();  // Set WebGL to render from this VBObox.
-  	part2Box.adjust();		  // Send new values for uniforms to the GPU, and
-  	part2Box.draw();			  // draw our VBO's contents using our shaders.
-  	}
-/* // ?How slow is our own code?  	
-var aftrDraw = Date.now();
-var drawWait = aftrDraw - b4Draw;
-console.log("wait b4 draw: ", b4Wait, "drawWait: ", drawWait, "mSec");
-*/
+    part1Box.adjust();		  // Send new values for uniforms to the GPU, and
+    part1Box.draw();			  // draw our VBO's contents using our shaders.
+  }
+  if (g_show2 == 1) { // IF user didn't press HTML button to 'hide' VBO2:
+    part2Box.switchToMe();  // Set WebGL to render from this VBObox.
+    part2Box.adjust();		  // Send new values for uniforms to the GPU, and
+    part2Box.draw();			  // draw our VBO's contents using our shaders.
+  }
+  /* // ?How slow is our own code?
+  var aftrDraw = Date.now();
+  var drawWait = aftrDraw - b4Draw;
+  console.log("wait b4 draw: ", b4Wait, "drawWait: ", drawWait, "mSec");
+  */
 }
 
-function VBO0toggle() {
+function lightToggle() {
 //=============================================================================
 // Called when user presses HTML-5 button 'Show/Hide VBO0'.
-  if(g_light_enabled != 1) g_light_enabled = 1;				// show,
-  else g_light_enabled = 0;										// hide.
-}
-
-function VBO1toggle() {
-//=============================================================================
-// Called when user presses HTML-5 button 'Show/Hide VBO1'.
-  if(g_show1 != 1) g_show1 = 1;			// show,
-  else g_show1 = 0;									// hide.
-  console.log('g_show1: '+g_show1);
-}
-
-function VBO2toggle() {
-//=============================================================================
-// Called when user presses HTML-5 button 'Show/Hide VBO2'.
-  if(g_show2 != 1) g_show2 = 1;			// show,
-  else g_show2 = 0;									// hide.
-  console.log('g_show2: '+g_show2);
+  g_light_on = !g_light_on;										// hide.
 }
 
 function myKeyDown(kev) {
@@ -345,7 +321,7 @@ function myKeyDown(kev) {
     case "ArrowLeft":
       var last_x = r * Math.sin(g_view_angel)
       var last_y = r * (Math.cos(g_view_angel) - 1)
-      g_view_angel -= Math.PI/60
+      g_view_angel -= Math.PI / 60
       g_camera_look[0] += r * Math.sin(g_view_angel) - last_x
       g_camera_look[1] += r * (Math.cos(g_view_angel) - 1) - last_y
       console.log(r + " " + g_camera_look[0] + " " + g_camera_look[2])
@@ -353,7 +329,7 @@ function myKeyDown(kev) {
     case "ArrowRight":
       var last_x = r * Math.sin(g_view_angel)
       var last_y = r * (Math.cos(g_view_angel) - 1)
-      g_view_angel += Math.PI/60
+      g_view_angel += Math.PI / 60
       g_camera_look[0] += r * Math.sin(g_view_angel) - last_x
       g_camera_look[1] += r * (Math.cos(g_view_angel) - 1) - last_y
       console.log(r + " " + g_camera_look[0] + " " + g_camera_look[2])
@@ -408,81 +384,72 @@ function resizeCanvas() {
 }
 
 function update_light_pos_x(val) {
-  lamp0pos[0] = val
+  g_lamp0pos[0] = val
   document.getElementById('lpx').innerHTML = val
 }
 
 function update_light_pos_y(val) {
-  lamp0pos[1] = val
+  g_lamp0pos[1] = val
   document.getElementById('lpy').innerHTML = val
 }
 
 function update_light_pos_z(val) {
-  lamp0pos[2] = val
+  g_lamp0pos[2] = val
   document.getElementById('lpz').innerHTML = val
 }
 
 function update_light_amb_r(val) {
-  lamp0ambi[0] = val/255
+  g_lamp0ambi[0] = val / 255
   document.getElementById('lar').innerHTML = val
 }
 
 function update_light_amb_g(val) {
-  lamp0ambi[1] = val/255
+  g_lamp0ambi[1] = val / 255
   document.getElementById('lag').innerHTML = val
 }
 
 function update_light_amb_b(val) {
-  lamp0ambi[2] = val/255
+  g_lamp0ambi[2] = val / 255
   document.getElementById('lab').innerHTML = val
 }
 
 function update_light_diff_r(val) {
-  lamp0diff[0] = val/255
+  g_lamp0diff[0] = val / 255
   document.getElementById('ldr').innerHTML = val
 }
 
 function update_light_diff_g(val) {
-  lamp0diff[1] = val/255
+  g_lamp0diff[1] = val / 255
   document.getElementById('ldg').innerHTML = val
 }
 
 function update_light_diff_b(val) {
-  lamp0diff[2] = val/255
+  g_lamp0diff[2] = val / 255
   document.getElementById('ldb').innerHTML = val
 }
 
 function update_light_spec_r(val) {
-  lamp0spec[0] = val/255
+  g_lamp0spec[0] = val / 255
   document.getElementById('lsr').innerHTML = val
 }
 
 function update_light_spec_g(val) {
-  lamp0spec[1] = val/255
+  g_lamp0spec[1] = val / 255
   document.getElementById('lsg').innerHTML = val
 }
 
 function update_light_spec_b(val) {
-  lamp0spec[2] = val/255
+  g_lamp0spec[2] = val / 255
   document.getElementById('lsb').innerHTML = val
 }
 
-function lightSelectChange() {
-  var light = document.getElementById("light").value;
-  if (light === "phong-light") {
-    g_light_mode = 1
-  } else {
-    g_light_mode = 0
-  }
+function changeLightingMethod() {
+  var light = document.getElementById("lighting").value;
+  g_light_method = parseInt(light)
 }
 
-function shadingSelectChange() {
+function changeShadingMethod() {
   var shading = document.getElementById("shading").value;
-  if (shading === "gouraud-shading") {
-    g_show1 = 1
-    g_show2 = 0
-  } else {
-    g_show1 = 0
-    g_show2 = 1
-  }
+  g_show1 = (parseInt(shading) + 1) % 2
+  g_show2 = parseInt(shading)
 }

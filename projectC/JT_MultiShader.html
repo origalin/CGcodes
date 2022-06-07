@@ -15,18 +15,18 @@
     Please use a browser that supports "canvas"
 </canvas>
 <div class="grid">
-  <button type="button" onclick="VBO0toggle()">Light on/off</button> <br>
+  <button type="button" onclick="lightToggle()">Light on/off</button> <br>
   <p>
-    <label for="light">Lighting mode:</label>
-    <select name="light" id="light" onchange="lightSelectChange()">
-      <option value="phong-light">Phong</option>
-      <option value="blinnphong-light">Blinn-Phong</option>
+    <label for="lighting">Lighting methods</label>
+    <select name="lighting" id="lighting" onchange="changeLightingMethod()">
+      <option value="0">Phong</option>
+      <option value="1">Blinn-Phong</option>
     </select>
     </br>
-    <label for="shading">Shading mode:</label>
-    <select name="shading" id="shading" onchange="shadingSelectChange()">
-      <option value="gouraud-shading">Gouraud Shading</option>
-      <option value="phong-shading">Phong Shading</option>
+    <label for="shading">Shading methods</label>
+    <select name="shading" id="shading" onchange="changeShadingMethod()">
+      <option value="0">Gouraud Shading</option>
+      <option value="1">Phong Shading</option>
     </select>
   </p>
 </div>
